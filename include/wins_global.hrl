@@ -13,8 +13,12 @@
 -define(ENV(Key, Default), application:get_env(?APPLICATION, Key, Default)).
 
 
-%% COWBOY SETTINGS
+%% POOLER SETTINGS
+-define(POOL_COUNT, 20).
+-define(POOL_MAX_COUNT, 50).
 
+
+%% COWBOY SETTINGS
 -define(COWBOY_WINS_GW_ACCEPTORS, 20).
 -define(COWBOY_WINS_GW_PORT, 2250).
 

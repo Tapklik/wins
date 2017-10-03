@@ -16,7 +16,10 @@
 
 start() ->
 	_ = [application:start(Dep) || Dep <- resolve_deps(wins),
-		not is_otp_base_app(Dep)],
+		not is_otp_base_app(Dep)].
+
+
+start(_Type, _Args) ->
 	application:start(cowboy),
 	RouteSpecs2 = [{"/sad23ref34578hj/wins", wins_http_handler, []}, {"/sad23ref34578hj/clicks", wins_clicks_http_handler, []}],
 	Dispatch2 = cowboy_router:compile([
@@ -29,9 +32,12 @@ start() ->
 	%% Start RMQ Pub/Sub workers
 	[rmq:start_subscriber(Subscriber) || Subscriber <- ?RMQ_SUBSCRIBERS],
 	[rmq:start_publisher(Publisher) || Publisher <- ?RMQ_PUBLISHERS],
-	ok.
-
-start(_Type, _Args) ->
+	CassWorkerPool = [
+		{name, wins_pool},
+		{max_count, ?POOL_MAX_COUNT}, {init_count, ?POOL_COUNT},
+		{start_mfa, {wins_server, start_link, []}}
+	],
+	pooler:new_pool(CassWorkerPool),
 	wins_sup:start_link().
 
 stop(_State) ->

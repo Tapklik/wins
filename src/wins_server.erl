@@ -29,10 +29,18 @@ start_link() ->
 
 
 log_win(WinNotification) ->
-	gen_server:call(?MODULE, {log_win, WinNotification}).
+	case try_get_worker() of
+		{ok, Worker} ->
+			gen_server:call(Worker, {log_win, WinNotification});
+		E -> E
+	end.
 
 log_win_click(WinNotification) ->
-	gen_server:call(?MODULE, {log_win_click, WinNotification}).
+	case try_get_worker() of
+		{ok, Worker} ->
+			gen_server:call(Worker, {log_win_click, WinNotification});
+		E -> E
+	end.
 
 %%%%%%%%%%%%%%%%%%%%%%
 %%%    CALLBACKS   %%%
@@ -94,3 +102,15 @@ code_change(_OldVsn, State, _Extra) ->
 %%%    INTERNAL    %%%
 %%%%%%%%%%%%%%%%%%%%%%
 
+try_get_worker() ->
+	try_get_worker(3).
+try_get_worker(0) ->
+	{error, no_members_available};
+try_get_worker(N) ->
+	case pooler:take_member(wins) of
+		error_no_members ->
+			?WARN("POOLER (~p): No members available! Retrying [1/3]... ", [cass]),
+			try_get_worker(N - 1);
+		W ->
+			{ok, W}
+	end.
