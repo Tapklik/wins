@@ -16,10 +16,7 @@
 
 start() ->
 	_ = [application:start(Dep) || Dep <- resolve_deps(wins),
-		not is_otp_base_app(Dep)].
-
-
-start(_Type, _Args) ->
+		not is_otp_base_app(Dep)],
 	application:start(cowboy),
 	RouteSpecs2 = [{"/sad23ref34578hj/wins", wins_http_handler, []}, {"/sad23ref34578hj/clicks", wins_clicks_http_handler, []}],
 	Dispatch2 = cowboy_router:compile([
@@ -30,14 +27,21 @@ start(_Type, _Args) ->
 	}),
 	?INFO("COWBOY: Started ~p acceptors, on port ~p", [?COWBOY_WINS_GW_ACCEPTORS, ?COWBOY_WINS_GW_PORT]),
 	%% Start RMQ Pub/Sub workers
-	[rmq:start_subscriber(Subscriber) || Subscriber <- ?RMQ_SUBSCRIBERS],
-	[rmq:start_publisher(Publisher) || Publisher <- ?RMQ_PUBLISHERS],
-	CassWorkerPool = [
+	WinsWorkerPool = [
 		{name, wins_pool},
 		{max_count, ?POOL_MAX_COUNT}, {init_count, ?POOL_COUNT},
 		{start_mfa, {wins_server, start_link, []}}
 	],
-	pooler:new_pool(CassWorkerPool),
+	%% Start RMQ Pub/Sub workers
+	[rmq:start_subscriber(Subscriber) || Subscriber <- ?RMQ_SUBSCRIBERS],
+	[rmq:start_publisher(Publisher) || Publisher <- ?RMQ_PUBLISHERS],
+	?INFO("POOLER: Started ~p pool, with initial count of ~p and max count of ~p",
+		[bids_pooler, ?POOL_COUNT, ?POOL_MAX_COUNT]),
+	pooler:new_pool(WinsWorkerPool),
+	ok.
+
+
+start(_Type, _Args) ->
 	wins_sup:start_link().
 
 stop(_State) ->

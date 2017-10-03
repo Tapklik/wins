@@ -13,12 +13,11 @@
 		compiler,
 		syntax_tools,
 		goldrush,
-		pooler,
 		sasl,
 		bertconf,
 		statsderl
 	]},
-	{included_applications, []},
+	{included_applications, [pooler]},
 	{mod, {wins, []}},
 	{env, []}
 ]}.

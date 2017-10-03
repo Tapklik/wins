@@ -23,14 +23,6 @@ start_link() ->
 %%%%%%%%%%%%%%%%%%%%%%
 
 init([]) ->
-	PoolerSup = #{
-		id => pooler_sup,
-		start => {pooler_sup, start_link, []},
-		restart => permanent,
-		shutdown => infinity,
-		type => supervisor,
-		modules => [pooler_sup]
-	},
 	RmqSup = #{
 		id => rmq_sup,
 		start => {rmq_sup, start_link, []},
@@ -38,6 +30,14 @@ init([]) ->
 		shutdown => infinity,
 		type => supervisor,
 		modules => [rmq_sup]
+	},
+	PoolerSup = #{
+		id => pooler_sup,
+		start => {pooler_sup, start_link, []},
+		restart => permanent,
+		shutdown => infinity,
+		type => supervisor,
+		modules => [pooler_sup]
 	},
 	VMServer = #{
 		id => vm,
@@ -47,7 +47,7 @@ init([]) ->
 		type => worker,
 		modules => [vm]
 	},
-	Children = [PoolerSup, RmqSup, VMServer],
+	Children = [RmqSup, PoolerSup, VMServer],
 	RestartStrategy = {one_for_one, 10, 300},
 	{ok, {RestartStrategy, Children}}.
 
