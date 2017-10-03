@@ -76,7 +76,7 @@ init([Args]) ->
 			virtual_host = ?RMQ_VHOST
 		}),
 	{ok, Channel} = amqp_connection:open_channel(Connection),
-	erlang:send_after(100, self(), {init, Args}),
+	erlang:send_after(1000, self(), {init, Args}),
 	{ok, #state{channel = Channel}}.
 
 handle_call(check_health, _From, State) ->

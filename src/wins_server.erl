@@ -26,7 +26,7 @@
 
 start_link() ->
 	?INFO("WINS: Started Wins Server client (Pid: ~p)", [self()]),
-	gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+	gen_server:start_link(?MODULE, [], []).
 
 
 log_win(WinNotification) ->
