@@ -25,6 +25,7 @@
 %%%%%%%%%%%%%%%%%%%%%%
 
 start_link() ->
+	?INFO("WINS: Started Wins Server client (Pid: ~p)", [self()]),
 	gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 
@@ -107,9 +108,9 @@ try_get_worker() ->
 try_get_worker(0) ->
 	{error, no_members_available};
 try_get_worker(N) ->
-	case pooler:take_member(wins) of
+	case pooler:take_member(wins_pool) of
 		error_no_members ->
-			?WARN("POOLER (~p): No members available! Retrying [1/3]... ", [cass]),
+			?WARN("POOLER (~p): No members available! Retrying [1/3]... ", [wins_pool]),
 			try_get_worker(N - 1);
 		W ->
 			{ok, W}
