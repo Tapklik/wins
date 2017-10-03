@@ -25,6 +25,7 @@ content_types_provided(Req, State) ->
 	], Req, State}.
 
 handle_get(Req, State) ->
+	tk_lib:echo1(www, Req),
 	Resp = try
 			   QsVals = cowboy_req:parse_qs(Req),
 			   WinNotification = #win{

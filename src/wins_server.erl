@@ -54,9 +54,6 @@ handle_call({log_win, #win{
 		<<"crid">> => Crid,                		% creative id
 		<<"win_price">> => AdjustedWinPrice 	% win price
 	}, tk_lib:echo1(win, Data),
-	AdjustedWinNotification = #win{
-		bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, win_price = AdjustedWinPrice
-	},
 	rmq:publish(wins, term_to_binary(Data)),
 	{reply, {ok, successful}, State};
 
