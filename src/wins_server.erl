@@ -57,7 +57,6 @@ handle_call({log_win, #win{
 	AdjustedWinNotification = #win{
 		bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, win_price = AdjustedWinPrice
 	},
-	boss_cmp:log_win(Cmp, AdjustedWinNotification),
 	rmq:publish(wins, term_to_binary(Data)),
 	{reply, {ok, successful}, State};
 
