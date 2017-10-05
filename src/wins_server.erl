@@ -62,7 +62,9 @@ handle_call({log_win, #win{
 		<<"cmp">> => Cmp,                		% campaign id
 		<<"crid">> => Crid,                		% creative id
 		<<"win_price">> => AdjustedWinPrice 	% win price
-	}, tk_lib:echo1(win, Data),
+	},
+	?INFO("WINS SERVER: Win -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  win_price: $~p,  bid_id: ~p",
+		[TimeStamp, Cmp, Crid, WinPrice, BidId]),
 	rmq:publish(wins, term_to_binary(Data)),
 	{reply, {ok, successful}, State};
 
@@ -75,6 +77,8 @@ handle_call({log_win_click, #click{
 		<<"cmp">> => Cmp,                		% campaign id
 		<<"crid">> => Crid                		% creative id
 	},
+	?INFO("WINS SERVER: Click -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  bid_id: ~p",
+		[TimeStamp, Cmp, Crid, WinPrice, BidId]),
 	rmq:publish(clicks, term_to_binary(Data)),
 	{reply, {ok, successful}, State};
 
