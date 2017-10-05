@@ -78,7 +78,7 @@ handle_call({log_win_click, #click{
 		<<"crid">> => Crid                		% creative id
 	},
 	?INFO("WINS SERVER: Click -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  bid_id: ~p",
-		[TimeStamp, Cmp, Crid, WinPrice, BidId]),
+		[TimeStamp, Cmp, Crid, BidId]),
 	rmq:publish(clicks, term_to_binary(Data)),
 	{reply, {ok, successful}, State};
 
