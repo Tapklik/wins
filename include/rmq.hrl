@@ -7,14 +7,16 @@
 	exchange,
 	topic,
 	func,
-	pool_size
+	pool_size,
+	logging
 }).
 
 -record(publisher, {
 	name,
 	exchange,
 	topic,
-	pool_size
+	pool_size,
+	logging
 }).
 
 %% RABBITMQ PUBSUB SETTINGS
@@ -34,10 +36,12 @@
 		name = wins,
 		exchange = <<"wins">>,
 		topic = <<"wins.imps">>,
+		logging = true,
 		pool_size = 10},
 	#publisher{
 		name = clicks,
 		exchange = <<"wins">>,
 		topic = <<"wins.clicks">>,
+		logging = true,
 		pool_size = 4}
 ]).
