@@ -27,20 +27,30 @@ content_types_provided(Req, State) ->
 handle_get(Req, State) ->
 	Resp = try
 			   QsVals = cowboy_req:parse_qs(Req),
+			   Test = proplists:get_value(<<"test">>, QsVals, <<"0">>),
 			   ClickNotification = #click{
 				   bid_id = proplists:get_value(<<"bidid">>, QsVals, undefined),
 				   cmp = proplists:get_value(<<"c">>, QsVals, undefined),
 				   crid = proplists:get_value(<<"cr">>, QsVals, undefined),
 				   timestamp = binary_to_integer(proplists:get_value(<<"ts">>, QsVals, 0))
-				   },
+			   },
 			   case check_valid_click(ClickNotification) of
-				   valid ->
+				   valid when Test == <<"0">> ->
 					   case wins_server:log_win_click(ClickNotification) of
 						   {ok, _} ->
 							   "Success";
 						   _ ->
 							   "Error: invalid call"
 					   end;
+				   valid when Test == <<"1">> ->
+					   ?INFO("WINS SERVER (TEST): Click -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  bid_id: ~p",
+						   [
+							   ClickNotification#click.timestamp,
+							   ClickNotification#click.cmp,
+							   ClickNotification#click.crid,
+							   ClickNotification#click.bid_id
+						   ]),
+					   "Success";
 				   {invalid, Error} ->
 					   ?ERROR("WINS SERVER: Click notifications error [Req: ~p]. (Error: ~p)", [Req, Error]),
 					   "Error: invalid call"
