@@ -28,16 +28,21 @@ handle_get(Req, State) ->
 	Resp = try
 			   QsVals = cowboy_req:parse_qs(Req),
 			   Test = proplists:get_value(<<"test">>, QsVals, <<"0">>),
-			   WinNotification = #win{
+			   Exchange = proplists:get_value(<<"x">>, QsVals, <<"1">>),
+
+			   WinNotification1 = #win{
 				   bid_id = proplists:get_value(<<"bidid">>, QsVals, undefined),
 				   cmp = proplists:get_value(<<"c">>, QsVals, undefined),
 				   crid = proplists:get_value(<<"cr">>, QsVals, undefined),
 				   timestamp = binary_to_integer(proplists:get_value(<<"ts">>, QsVals, 0)),
-				   win_price = binary_to_float(proplists:get_value(<<"wp">>, QsVals, 0.0))
+				   win_price = proplists:get_value(<<"wp">>, QsVals, 0.0)
 			   },
-			   case check_valid_win(WinNotification) of
+
+			   WinNotification2 = wins_decrypt:decrypt(WinNotification1, Exchange),
+
+			   case check_valid_win(WinNotification2) of
 				   valid when Test == <<"0">> ->
-					   case wins_server:log_win(WinNotification) of
+					   case wins_server:log_win(WinNotification2) of
 						   {ok, _} ->
 							   "Success";
 						   _ ->
@@ -46,11 +51,11 @@ handle_get(Req, State) ->
 				   valid when Test == <<"1">> ->
 					   ?INFO("WINS SERVER (TEST): Win -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  win_price: ~p,  bid_id: ~p",
 						   [
-							   WinNotification#win.timestamp,
-							   WinNotification#win.cmp,
-							   WinNotification#win.crid,
-							   WinNotification#win.win_price,
-							   WinNotification#win.bid_id
+							   WinNotification2#win.timestamp,
+							   WinNotification2#win.cmp,
+							   WinNotification2#win.crid,
+							   WinNotification2#win.win_price,
+							   WinNotification2#win.bid_id
 						   ]),
 					   "Success";
 				   {invalid, Error} ->
@@ -83,6 +88,8 @@ check_valid_win(#win{timestamp = 0}) ->
 	{invalid, <<"invalid timestamp">>};
 check_valid_win(#win{win_price  = 0.0}) ->
 	{invalid, <<"invalid win price">>};
+check_valid_win(#win{win_price = <<"key_integrity_error">>}) ->
+	{invalid, <<"key_integrity_error">>};
 check_valid_win(#win{}) ->
 	valid;
 check_valid_win(_) ->
