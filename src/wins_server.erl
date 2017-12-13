@@ -54,7 +54,7 @@ init([]) ->
 
 handle_call({log_win, #win{
 	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, win_price = WinPrice
-}}, _From, State) ->
+}}, _From, State) -> tk_lib:echo1(winprice, WinPrice),
 	AdjustedWinPrice = WinPrice * 1000,
 	Data = #{
 		<<"timestamp">> => TimeStamp,    		% time stamp (5 mins)
