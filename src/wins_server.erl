@@ -53,32 +53,34 @@ init([]) ->
 	{ok, #state{}}.
 
 handle_call({log_win, #win{
-	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, win_price = WinPrice
-}}, _From, State) -> tk_lib:echo1(winprice, WinPrice),
+	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange, win_price = WinPrice
+}}, _From, State) ->
 	AdjustedWinPrice = WinPrice * 1000,
 	Data = #{
 		<<"timestamp">> => TimeStamp,    		% time stamp (5 mins)
 		<<"bid_id">> => BidId,          		% id
 		<<"cmp">> => Cmp,                		% campaign id
 		<<"crid">> => Crid,                		% creative id
+		<<"exchange">> => Exchange,				% exchange
 		<<"win_price">> => AdjustedWinPrice 	% win price
 	},
-	?INFO("WINS SERVER: Win -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  win_price: $~p,  bid_id: ~p",
-		[TimeStamp, Cmp, Crid, WinPrice, BidId]),
+	?INFO("WINS SERVER: Win -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  win_price: $~p,  exchange: ~p,  bid_id: ~p",
+		[TimeStamp, Cmp, Crid, WinPrice, Exchange, BidId]),
 	rmq:publish(wins, term_to_binary(Data)),
 	{reply, {ok, successful}, State};
 
 handle_call({log_win_click, #click{
-	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp
-}}, _From, State) ->
+	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange
+	}}, _From, State) ->
 	Data = #{
 		<<"timestamp">> => TimeStamp,    		% time stamp (5 mins)
 		<<"bid_id">> => BidId,          		% id
 		<<"cmp">> => Cmp,                		% campaign id
-		<<"crid">> => Crid                		% creative id
+		<<"crid">> => Crid,                		% creative id
+		<<"exchange">> => Exchange				% exchange
 	},
-	?INFO("WINS SERVER: Click -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  bid_id: ~p",
-		[TimeStamp, Cmp, Crid, BidId]),
+	?INFO("WINS SERVER: Click -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p",
+		[TimeStamp, Cmp, Crid, Exchange, BidId]),
 	rmq:publish(clicks, term_to_binary(Data)),
 	{reply, {ok, successful}, State};
 

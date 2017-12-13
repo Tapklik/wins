@@ -43,6 +43,7 @@
 	cmp,
 	crid,
 	timestamp,
+	exchange,
 	win_price
 }).
 
@@ -50,6 +51,7 @@
 	bid_id,
 	cmp,
 	crid,
+	exchange,
 	timestamp
 }).
 
