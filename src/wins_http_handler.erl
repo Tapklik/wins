@@ -49,12 +49,13 @@ handle_get(Req, State) ->
 							   "Error: invalid call"
 					   end;
 				   valid when Test == <<"1">> ->
-					   ?INFO("WINS SERVER (TEST): Win -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  win_price: ~p,  bid_id: ~p",
+					   ?INFO("WINS SERVER (TEST): Win -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  win_price: ~p,  exchange: ~p,  bid_id: ~p",
 						   [
 							   WinNotification2#win.timestamp,
 							   WinNotification2#win.cmp,
 							   WinNotification2#win.crid,
 							   WinNotification2#win.win_price,
+							   WinNotification2#win.exchange,
 							   WinNotification2#win.bid_id
 						   ]),
 					   "Success";

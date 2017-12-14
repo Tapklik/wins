@@ -43,11 +43,12 @@ handle_get(Req, State) ->
 							   "Error: invalid call"
 					   end;
 				   valid when Test == <<"1">> ->
-					   ?INFO("WINS SERVER (TEST): Click -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  bid_id: ~p",
+					   ?INFO("WINS SERVER (TEST): Click -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p",
 						   [
 							   ClickNotification#click.timestamp,
 							   ClickNotification#click.cmp,
 							   ClickNotification#click.crid,
+							   ClickNotification#click.exchange,
 							   ClickNotification#click.bid_id
 						   ]),
 					   "Success";
