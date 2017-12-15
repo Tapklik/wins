@@ -40,6 +40,7 @@ handle_get(Req, State) ->
 						   {ok, _} ->
 							   "Success";
 						   _ ->
+							   statsderl:increment(<<"clicks.error">>, 1, 1.0),
 							   "Error: invalid call"
 					   end;
 				   valid when Test == <<"1">> ->
@@ -53,11 +54,13 @@ handle_get(Req, State) ->
 						   ]),
 					   "Success";
 				   {invalid, Error} ->
+					   statsderl:increment(<<"clicks.error">>, 1, 1.0),
 					   ?ERROR("WINS SERVER: Click notifications error [Req: ~p]. (Error: ~p)", [Req, Error]),
 					   "Error: invalid call"
 			   end
 		   catch
 			   _:E ->
+				   statsderl:increment(<<"clicks.error">>, 1, 1.0),
 				   ?ERROR("WINS SERVER: Click notifications error [Req: ~p]. (Error: ~p)", [Req, E]),
 				   "Error: invalid call"
 		   end,

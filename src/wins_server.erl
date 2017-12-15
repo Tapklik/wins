@@ -66,6 +66,7 @@ handle_call({log_win, #win{
 	},
 	?INFO("WINS SERVER: Win -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  win_price: $~p,  exchange: ~p,  bid_id: ~p",
 		[TimeStamp, Cmp, Crid, WinPrice, Exchange, BidId]),
+	statsderl:increment(<<"wins.total">>, 1, 1.0),
 	rmq:publish(wins, term_to_binary(Data)),
 	pooler:return_member(wins_pool, self()),
 	{reply, {ok, successful}, State};
@@ -82,6 +83,7 @@ handle_call({log_win_click, #click{
 	},
 	?INFO("WINS SERVER: Click -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p",
 		[TimeStamp, Cmp, Crid, Exchange, BidId]),
+	statsderl:increment(<<"clicks.total">>, 1, 1.0),
 	rmq:publish(clicks, term_to_binary(Data)),
 	pooler:return_member(wins_pool, self()),
 	{reply, {ok, successful}, State};
