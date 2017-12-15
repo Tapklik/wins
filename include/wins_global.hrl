@@ -14,8 +14,8 @@
 
 
 %% POOLER SETTINGS
--define(POOL_COUNT, 20).
--define(POOL_MAX_COUNT, 50).
+-define(POOL_COUNT, 200).
+-define(POOL_MAX_COUNT, 350).
 
 
 %% COWBOY SETTINGS
