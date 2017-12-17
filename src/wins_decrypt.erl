@@ -51,7 +51,7 @@ google_price_decrypt(WinPrice) ->
 	case ConfSig == Sig of
 		true ->
 			%% price from google is in CPI (CPM $1.23 == CPI 1230)
-			decode_binary_price(PriceBin) / 1000;
+			trunc(decode_binary_price(PriceBin));
 		false ->
 			<<"key_integrity_error">>
 	end.

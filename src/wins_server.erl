@@ -55,14 +55,13 @@ init([]) ->
 handle_call({log_win, #win{
 	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange, win_price = WinPrice
 }}, _From, State) ->
-	AdjustedWinPrice = WinPrice * 1000,
 	Data = #{
 		<<"timestamp">> => TimeStamp,    		% time stamp (5 mins)
 		<<"bid_id">> => BidId,          		% id
 		<<"cmp">> => Cmp,                		% campaign id
 		<<"crid">> => Crid,                		% creative id
 		<<"exchange">> => Exchange,				% exchange
-		<<"win_price">> => AdjustedWinPrice 	% win price
+		<<"win_price">> => WinPrice			 	% win price (CPI)
 	},
 	?INFO("WINS SERVER: Win -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  win_price: $~p,  exchange: ~p,  bid_id: ~p",
 		[TimeStamp, Cmp, Crid, WinPrice, Exchange, BidId]),
