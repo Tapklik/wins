@@ -26,7 +26,7 @@ start() ->
 	{ok, _} = case ?ENV(start_with_ssl, false) of
 				  true ->
 					  cowboy:start_tls(https, ?COWBOY_WINS_GW_ACCEPTORS, [
-						  {port, ?COWBOY_WINS_GW_PORT},
+						  {port, 443},
 						  {cacertfile, PrivDir ++ "/ssl/cowboy-ca.crt"},
 						  {certfile, PrivDir ++ "/ssl/server.crt"},
 						  {keyfile, PrivDir ++ "/ssl/server.key"}
