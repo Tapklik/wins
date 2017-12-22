@@ -22,9 +22,25 @@ start() ->
 	Dispatch2 = cowboy_router:compile([
 		{'_', RouteSpecs2}
 	]),
-	{ok, _} = cowboy:start_clear(http2, ?COWBOY_WINS_GW_ACCEPTORS, [{port, ?COWBOY_WINS_GW_PORT}], #{
-		env => #{dispatch => Dispatch2}
-	}),
+	PrivDir = code:priv_dir(wins),
+	{ok, _} = case ?ENV(start_with_ssl, false) of
+				  true ->
+					  cowboy:start_clear(https, ?COWBOY_WINS_GW_ACCEPTORS, [
+						  {port, ?COWBOY_WINS_GW_PORT},
+						  {cacertfile, PrivDir ++ "/ssl/cowboy-ca.crt"},
+						  {certfile, PrivDir ++ "/ssl/server.crt"},
+						  {keyfile, PrivDir ++ "/ssl/server.key"}
+					  ],
+						  #{env => #{dispatch => Dispatch2}}
+					  );
+				  false ->
+					  cowboy:start_clear(http, ?COWBOY_WINS_GW_ACCEPTORS, [
+						  {port, ?COWBOY_WINS_GW_PORT}
+					  ],
+						  #{env => #{dispatch => Dispatch2}}
+					  )
+			  end,
+
 	?INFO("COWBOY: Started ~p acceptors, on port ~p", [?COWBOY_WINS_GW_ACCEPTORS, ?COWBOY_WINS_GW_PORT]),
 	%% Start RMQ Pub/Sub workers
 	WinsWorkerPool = [
