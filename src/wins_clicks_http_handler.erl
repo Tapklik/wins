@@ -28,11 +28,14 @@ handle_get(Req, State) ->
 	Resp = try
 			   QsVals = cowboy_req:parse_qs(Req),
 			   Test = proplists:get_value(<<"test">>, QsVals, <<"0">>),
+			   Exchange = proplists:get_value(<<"x">>, QsVals, <<"1">>),
+
 			   ClickNotification = #click{
 				   bid_id = proplists:get_value(<<"bidid">>, QsVals, undefined),
 				   cmp = proplists:get_value(<<"c">>, QsVals, undefined),
 				   crid = proplists:get_value(<<"cr">>, QsVals, undefined),
-				   timestamp = binary_to_integer(proplists:get_value(<<"ts">>, QsVals, 0))
+				   timestamp = binary_to_integer(proplists:get_value(<<"ts">>, QsVals, 0)),
+				   exchange = Exchange
 			   },
 			   case check_valid_click(ClickNotification) of
 				   valid when Test == <<"0">> ->

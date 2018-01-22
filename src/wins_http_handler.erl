@@ -35,7 +35,8 @@ handle_get(Req, State) ->
 				   cmp = proplists:get_value(<<"c">>, QsVals, undefined),
 				   crid = proplists:get_value(<<"cr">>, QsVals, undefined),
 				   timestamp = binary_to_integer(proplists:get_value(<<"ts">>, QsVals, 0)),
-				   win_price = proplists:get_value(<<"wp">>, QsVals, 0.0)
+				   win_price = proplists:get_value(<<"wp">>, QsVals, 0.0),
+				   exchange = Exchange
 			   },
 
 			   WinNotification2 = wins_decrypt:decrypt(WinNotification1, Exchange),
