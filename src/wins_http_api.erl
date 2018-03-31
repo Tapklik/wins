@@ -34,7 +34,6 @@ handle_get(Req, State) ->
 			   <<"reports">> ->
 				   Qs = cowboy_req:parse_qs(Req),
 				   URI = tk_maps:get([headers, <<"host">>], Req),
-				   Path = cowboy_req:path(Req),
 				   case wins_db:get(Qs) of
 					   {ok, ReportId} ->
 						   <<URI/binary, "/reports/", ReportId/binary>>;
