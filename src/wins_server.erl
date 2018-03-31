@@ -54,7 +54,7 @@ init([]) ->
 
 handle_call({log_win, #win{
 	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange, win_price = WinPrice
-}}, _From, State) ->
+} = Win}, _From, State) ->
 	Data = #{
 		<<"timestamp">> => TimeStamp,    		% time stamp (5 mins)
 		<<"bid_id">> => BidId,          		% id
@@ -66,13 +66,14 @@ handle_call({log_win, #win{
 	?INFO("WINS SERVER: Win -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  win_price: $~p,  exchange: ~p,  bid_id: ~p",
 		[TimeStamp, Cmp, Crid, WinPrice, Exchange, BidId]),
 	statsderl:increment(<<"wins.total">>, 1, 1.0),
+	wins_db:insert(Win),
 	rmq:publish(wins, term_to_binary(Data)),
 	pooler:return_member(wins_pool, self()),
 	{reply, {ok, successful}, State};
 
 handle_call({log_win_click, #click{
 	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange
-	}}, _From, State) ->
+	} = Click}, _From, State) ->
 	Data = #{
 		<<"timestamp">> => TimeStamp,    		% time stamp (5 mins)
 		<<"bid_id">> => BidId,          		% id
@@ -83,6 +84,7 @@ handle_call({log_win_click, #click{
 	?INFO("WINS SERVER: Click -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p",
 		[TimeStamp, Cmp, Crid, Exchange, BidId]),
 	statsderl:increment(<<"clicks.total">>, 1, 1.0),
+	wins_db:insert(Click),
 	rmq:publish(clicks, term_to_binary(Data)),
 	pooler:return_member(wins_pool, self()),
 	{reply, {ok, successful}, State};

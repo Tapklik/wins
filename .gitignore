@@ -27,6 +27,7 @@ logs
 data
 edoc
 priv/*.so
+priv/reports/*
 *.crashdump
 rebar.lock
 *_plt

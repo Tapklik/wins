@@ -18,7 +18,12 @@ start() ->
 	_ = [application:start(Dep) || Dep <- resolve_deps(wins),
 		not is_otp_base_app(Dep)],
 	application:start(cowboy),
-	RouteSpecs2 = [{"/sad23ref34578hj/wins", wins_http_handler, []}, {"/sad23ref34578hj/clicks", wins_clicks_http_handler, []}],
+	RouteSpecs2 = [
+		{"/reports/[...]", cowboy_static, {priv_dir, wins, "reports"}},
+		{"/api/v1/[:service]", wins_http_api, []},
+		{"/sad23ref34578hj/wins", wins_http_handler, []},
+		{"/sad23ref34578hj/clicks", wins_clicks_http_handler, []}
+	],
 	Dispatch2 = cowboy_router:compile([
 		{'_', RouteSpecs2}
 	]),

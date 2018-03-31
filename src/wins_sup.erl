@@ -39,6 +39,14 @@ init([]) ->
 		type => supervisor,
 		modules => [pooler_sup]
 	},
+	DBServer = #{
+		id => wins_db,
+		start => {wins_db, start_link, []},
+		restart => permanent,
+		shutdown => 2000,
+		type => worker,
+		modules => [wins_db]
+	},
 	VMServer = #{
 		id => vm,
 		start => {vm, start_link, []},
@@ -47,7 +55,15 @@ init([]) ->
 		type => worker,
 		modules => [vm]
 	},
-	Children = [RmqSup, PoolerSup, VMServer],
+	TimeServer = #{
+		id => time_server,
+		start => {time_server, start_link, []},
+		restart => permanent,
+		shutdown => 2000,
+		type => worker,
+		modules => [time_server]
+	},
+	Children = [RmqSup, PoolerSup, 	DBServer, VMServer, TimeServer],
 	RestartStrategy = {one_for_one, 10, 300},
 	{ok, {RestartStrategy, Children}}.
 
