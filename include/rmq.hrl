@@ -29,7 +29,13 @@
 
 %% RABBITMQ PUBSUB SUBSCRIBERS AND PUBLISHERS
 -define(RMQ_SUBSCRIBERS, [
-
+	#subscriber{
+		name = cmp_config,
+		exchange = <<"campaigns">>,
+		topic = <<"config.general">>,
+		logging = true,
+		func = fun(P) -> wins_creatives:load_cmp_config(P) end,
+		pool_size = 10}
 ]).
 -define(RMQ_PUBLISHERS, [
 	#publisher{
