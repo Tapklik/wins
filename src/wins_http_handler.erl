@@ -26,14 +26,17 @@ content_types_provided(Req, State) ->
 
 handle_get(Req, State) ->
 	Resp = try
+			   Cmp = cowboy_req:binding(cmp, Req),
+			   Crid = cowboy_req:binding(crid, Req),
+
 			   QsVals = cowboy_req:parse_qs(Req),
 			   Test = proplists:get_value(<<"test">>, QsVals, <<"0">>),
 			   Exchange = proplists:get_value(<<"x">>, QsVals, <<"1">>),
 
 			   WinNotification1 = #win{
 				   bid_id = proplists:get_value(<<"bidid">>, QsVals, undefined),
-				   cmp = proplists:get_value(<<"c">>, QsVals, undefined),
-				   crid = proplists:get_value(<<"cr">>, QsVals, undefined),
+				   cmp = Cmp,
+				   crid = Crid,
 				   timestamp = binary_to_integer(proplists:get_value(<<"ts">>, QsVals, 0)),
 				   win_price = proplists:get_value(<<"wp">>, QsVals, 0.0),
 				   exchange = Exchange

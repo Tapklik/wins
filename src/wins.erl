@@ -21,7 +21,7 @@ start() ->
 	RouteSpecs2 = [
 		{"/reports/[...]", cowboy_static, {priv_dir, wins, "reports"}},
 		{"/api/v1/[:service]", wins_http_api, []},
-		{"/sad23ref34578hj/wins", wins_http_handler, []},
+		{"/wins/[:crid]/[:cmp]", wins_http_handler, []},
 		{"/butler/[:crid]/[:cmp]", wins_imps_http_handler, []},
 		{"/link/[:crid]/[:cmp]", wins_clicks_http_handler, []}
 	],
