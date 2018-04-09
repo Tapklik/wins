@@ -41,6 +41,12 @@
 	#publisher{
 		name = wins,
 		exchange = <<"wins">>,
+		topic = <<"wins.wins">>,
+		logging = true,
+		pool_size = 10},
+	#publisher{
+		name = imps,
+		exchange = <<"wins">>,
 		topic = <<"wins.imps">>,
 		logging = true,
 		pool_size = 10},

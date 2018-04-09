@@ -98,11 +98,12 @@ get_and_save_creatives(CmpConfig) ->
 			V = #{
 				<<"adm">> => tk_maps:get([<<"adm">>], C),
 				<<"adm_iframe">> => tk_maps:get([<<"adm_iframe">>], C),
-				<<"adm_url">> => tk_maps:get([<<"crid">>], C),
+				<<"adm_url">> => tk_maps:get([<<"adm_url">>], C),
 				<<"class">> => tk_maps:get([<<"class">>], C),
 				<<"h">> => tk_maps:get([<<"h">>], C),
 				<<"w">> => tk_maps:get([<<"w">>], C),
-				<<"ctrurl">> => get_ctrurl(CmpCtrUrl, tk_maps:get([<<"ctrurl">>], C))
+				<<"ctrurl">> => get_ctrurl(CmpCtrUrl, tk_maps:get([<<"ctrurl">>], C)),
+				<<"path">> => tk_maps:get([<<"path">>], C)
 			},
 			ets:insert(creatives, {K, V})
 		end
@@ -115,13 +116,3 @@ get_ctrurl(CmpCtrUrl, Default) when
 	Default;
 get_ctrurl(CmpCtrUrl, _) ->
 	CmpCtrUrl.
-
-
-
-
-
-
-
-
-
-

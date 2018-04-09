@@ -47,7 +47,24 @@
 	win_price
 }).
 
+
+-record(imp, {
+	bid_id,
+	cmp,
+	crid,
+	exchange,
+	timestamp
+}).
+
 -record(click, {
+	bid_id,
+	cmp,
+	crid,
+	exchange,
+	timestamp
+}).
+
+-record(conversion, {
 	bid_id,
 	cmp,
 	crid,

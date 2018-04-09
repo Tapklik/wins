@@ -1,4 +1,13 @@
--module(wins_clicks_http_handler).
+%%%-------------------------------------------------------------------
+%%% @author adi
+%%% @copyright (C) 2018, <COMPANY>
+%%% @doc
+%%%
+%%% @end
+%%% Created : 02. Apr 2018 11:20 AM
+%%%-------------------------------------------------------------------
+-module(wins_imps_http_handler).
+-author("adi").
 
 -include("wins_global.hrl").
 -include("lager.hrl").
@@ -8,7 +17,6 @@
 	allowed_methods/2,
 	content_types_provided/2
 ]).
-
 -export([handle_get/2]).
 
 
@@ -29,35 +37,29 @@ handle_get(Req, State) ->
 	Crid = cowboy_req:binding(crid, Req),
 	QsVals = cowboy_req:parse_qs(Req),
 	Test = proplists:get_value(<<"test">>, QsVals, <<"0">>),
-	Click = #click{
+	Imp = #imp{
 		cmp = Cmp,
 		crid = Crid,
 		bid_id = proplists:get_value(<<"b">>, QsVals, undefined),
 		timestamp = binary_to_integer(proplists:get_value(<<"ts">>, QsVals, <<"0">>)),
 		exchange = proplists:get_value(<<"x">>, QsVals, <<"1">>)
 	},
-	case check_valid_click(Click) of
+	case check_valid_imp(Imp) of
 		valid ->
-			case wins_server:log_click(Click, Test) of
-				{ok, null} ->
-					statsderl:increment(<<"clicks.error">>, 1, 1.0),
-					?ERROR("WINS SERVER: Click notifications error [Req: ~p]. (Error: No ctrurl set!!)", [Req]),
-					"Error: invalid call";
-				{ok, Redirect} ->
-					cowboy_req:reply(302, #{
-						<<"Location">> => Redirect
-					}, Req);
-				_ ->
-					statsderl:increment(<<"clicks.error">>, 1, 1.0),
+			case wins_server:log_imp(Imp, Test) of
+				{ok, _} ->
+					ok;
+				{error, Error} ->
+					statsderl:increment(<<"imps.error">>, 1, 1.0),
+					?ERROR("WINS SERVER: Imp notifications error [Req: ~p]. (Error: ~p)", [Req, Error]),
 					"Error: invalid call"
 			end;
 		{invalid, Error} ->
-			statsderl:increment(<<"clicks.error">>, 1, 1.0),
-			?ERROR("WINS SERVER: Click notifications error [Req: ~p]. (Error: ~p)", [Req, Error]),
+			statsderl:increment(<<"imps.error">>, 1, 1.0),
+			?ERROR("WINS SERVER: Imp notifications error [Req: ~p]. (Error: ~p)", [Req, Error]),
 			"Error: invalid call"
 	end,
-	%% todo add cases for ets and solve cache busting problem with 301 code
-	{stop, Req, State}.
+	{<<"">>, Req, State}.
 
 %%%%%%%%%%%%%%%%%%%%%%
 %%%    API CALLS   %%%
@@ -68,15 +70,16 @@ handle_get(Req, State) ->
 %%%    INTERNAL    %%%
 %%%%%%%%%%%%%%%%%%%%%%
 
-check_valid_click(#click{bid_id = undefined}) ->
+check_valid_imp(#imp{bid_id = undefined}) ->
 	{invalid, <<"invalid bid_id">>};
-check_valid_click(#click{cmp = undefined}) ->
+check_valid_imp(#imp{cmp = undefined}) ->
 	{invalid, <<"invalid cmp">>};
-check_valid_click(#click{crid = undefined}) ->
+check_valid_imp(#imp{crid = undefined}) ->
 	{invalid, <<"invalid crid">>};
-check_valid_click(#click{timestamp = 0}) ->
+check_valid_imp(#imp{timestamp = 0}) ->
 	{invalid, <<"invalid timestamp">>};
-check_valid_click(#click{}) ->
+check_valid_imp(#imp{}) ->
 	valid;
-check_valid_click(_) ->
+check_valid_imp(_) ->
 	{invalid, <<"invalid format">>}.
+

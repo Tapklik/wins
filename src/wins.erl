@@ -22,7 +22,8 @@ start() ->
 		{"/reports/[...]", cowboy_static, {priv_dir, wins, "reports"}},
 		{"/api/v1/[:service]", wins_http_api, []},
 		{"/sad23ref34578hj/wins", wins_http_handler, []},
-		{"/sad23ref34578hj/clicks", wins_clicks_http_handler, []}
+		{"/butler/[:crid]/[:cmp]", wins_imps_http_handler, []},
+		{"/link/[:crid]/[:cmp]", wins_clicks_http_handler, []}
 	],
 	Dispatch2 = cowboy_router:compile([
 		{'_', RouteSpecs2}

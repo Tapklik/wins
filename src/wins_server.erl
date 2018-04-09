@@ -6,7 +6,7 @@
 -include("lager.hrl").
 
 -export([start_link/0]).
--export([log_win/1, log_win_click/1]).
+-export([log_win/1, log_imp/2, log_click/2]).
 
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
 	terminate/2, code_change/3]).
@@ -36,10 +36,17 @@ log_win(WinNotification) ->
 		E -> E
 	end.
 
-log_win_click(WinNotification) ->
+log_imp(Imp, Test) ->
 	case try_get_worker() of
 		{ok, Worker} ->
-			gen_server:call(Worker, {log_win_click, WinNotification});
+			gen_server:call(Worker, {log_click, Imp, Test});
+		E -> E
+	end.
+
+log_click(Click, Test) ->
+	case try_get_worker() of
+		{ok, Worker} ->
+			gen_server:call(Worker, {log_click, Click, Test});
 		E -> E
 	end.
 
@@ -71,9 +78,32 @@ handle_call({log_win, #win{
 	pooler:return_member(wins_pool, self()),
 	{reply, {ok, successful}, State};
 
-handle_call({log_win_click, #click{
+handle_call({log_imp, #imp{
 	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange
-	} = Click}, _From, State) ->
+} = Imp, Test}, _From, State) ->
+	Data = #{
+		<<"timestamp">> => TimeStamp,            % time stamp (5 mins)
+		<<"bid_id">> => BidId,                % id
+		<<"cmp">> => Cmp,                        % campaign id
+		<<"crid">> => Crid,                        % creative id
+		<<"exchange">> => Exchange                % exchange
+	},
+	case Test of
+		<<"1">> ->
+			ok;
+		_ ->
+			?INFO("WINS SERVER: Imp -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p",
+				[TimeStamp, Cmp, Crid, Exchange, BidId]),
+			statsderl:increment(<<"imps.total">>, 1, 1.0),
+			wins_db:insert(Imp),
+			rmq:publish(imps, term_to_binary(Data))
+	end,
+	pooler:return_member(wins_pool, self()),
+	{reply, {ok, successful}, State};
+
+handle_call({log_click, #click{
+	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange
+	} = Click, Test}, _From, State) ->
 	Data = #{
 		<<"timestamp">> => TimeStamp,    		% time stamp (5 mins)
 		<<"bid_id">> => BidId,          		% id
@@ -83,11 +113,21 @@ handle_call({log_win_click, #click{
 	},
 	?INFO("WINS SERVER: Click -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p",
 		[TimeStamp, Cmp, Crid, Exchange, BidId]),
-	statsderl:increment(<<"clicks.total">>, 1, 1.0),
-	wins_db:insert(Click),
-	rmq:publish(clicks, term_to_binary(Data)),
+	case Test of
+		<<"1">> ->
+			ok;
+		_ ->
+			?INFO("WINS SERVER: Click -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p",
+				[TimeStamp, Cmp, Crid, Exchange, BidId]),
+			statsderl:increment(<<"clicks.total">>, 1, 1.0),
+			wins_db:insert(Click),
+			rmq:publish(clicks, term_to_binary(Data))
+	end,
+	[{_, CreativeMap} | _] = ets:lookup(creatives, {Cmp, Crid}),
+	tk_lib:echo1(cm, CreativeMap),
+	Redirect = tk_maps:get([<<"ctrurl">>], CreativeMap),
 	pooler:return_member(wins_pool, self()),
-	{reply, {ok, successful}, State};
+	{reply, {ok, Redirect}, State};
 
 handle_call(_Request, _From, State) ->
 	{reply, ok, State}.
