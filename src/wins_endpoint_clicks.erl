@@ -1,4 +1,4 @@
--module(wins_clicks_http_handler).
+-module(wins_endpoint_clicks).
 
 -include("wins_global.hrl").
 -include("lager.hrl").
@@ -28,7 +28,7 @@ handle_get(Req, State) ->
 	Cmp = cowboy_req:binding(cmp, Req),
 	Crid = cowboy_req:binding(crid, Req),
 	QsVals = cowboy_req:parse_qs(Req),
-	Test = proplists:get_value(<<"test">>, QsVals, <<"0">>),
+	Test = is_test(proplists:get_value(<<"test">>, QsVals)),
 	Click = #click{
 		cmp = Cmp,
 		crid = Crid,
@@ -38,7 +38,7 @@ handle_get(Req, State) ->
 	},
 	case check_valid_click(Click) of
 		valid ->
-			case wins_server:log_click(Click, Test) of
+			case wins_server:log_click(Click, [{test, Test}]) of
 				{ok, null} ->
 					statsderl:increment(<<"clicks.error">>, 1, 1.0),
 					?ERROR("WINS SERVER: Click notifications error [Req: ~p]. (Error: No ctrurl set!!)", [Req]),
@@ -67,6 +67,11 @@ handle_get(Req, State) ->
 %%%%%%%%%%%%%%%%%%%%%%
 %%%    INTERNAL    %%%
 %%%%%%%%%%%%%%%%%%%%%%
+
+is_test(<<"1">>) ->
+	true;
+is_test(_) ->
+	false.
 
 check_valid_click(#click{bid_id = undefined}) ->
 	{invalid, <<"invalid bid_id">>};

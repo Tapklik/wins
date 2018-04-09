@@ -6,7 +6,7 @@
 -include("lager.hrl").
 
 -export([start_link/0]).
--export([log_win/1, log_imp/2, log_click/2]).
+-export([log_win/2, log_imp/2, log_click/2, log_conversion/2]).
 
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
 	terminate/2, code_change/3]).
@@ -29,26 +29,30 @@ start_link() ->
 	gen_server:start_link(?MODULE, [], []).
 
 
-log_win(WinNotification) ->
+log_win(WinNotification, Opts) ->
 	case try_get_worker() of
 		{ok, Worker} ->
-			gen_server:call(Worker, {log_win, WinNotification});
+			gen_server:call(Worker, {log_win, WinNotification, parse_opts(Opts)});
 		E -> E
 	end.
 
-log_imp(Imp, Test) ->
+log_imp(Imp, Opts) ->
 	case try_get_worker() of
 		{ok, Worker} ->
-			gen_server:call(Worker, {log_click, Imp, Test});
+			gen_server:call(Worker, {log_imp, Imp, parse_opts(Opts)});
 		E -> E
 	end.
 
-log_click(Click, Test) ->
+log_click(Click, Opts) ->
 	case try_get_worker() of
 		{ok, Worker} ->
-			gen_server:call(Worker, {log_click, Click, Test});
+			gen_server:call(Worker, {log_click, Click, parse_opts(Opts)});
 		E -> E
 	end.
+
+log_conversion(Conversion, Opts) ->
+	%% TODO
+	ok.
 
 %%%%%%%%%%%%%%%%%%%%%%
 %%%    CALLBACKS   %%%
@@ -61,70 +65,63 @@ init([]) ->
 
 handle_call({log_win, #win{
 	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange, win_price = WinPrice
-} = Win}, _From, State) ->
-	Data = #{
-		<<"timestamp">> => TimeStamp,    		% time stamp (5 mins)
-		<<"bid_id">> => BidId,          		% id
-		<<"cmp">> => Cmp,                		% campaign id
-		<<"crid">> => Crid,                		% creative id
-		<<"exchange">> => Exchange,				% exchange
-		<<"win_price">> => WinPrice			 	% win price (CPI)
-	},
-	?INFO("WINS SERVER: Win -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  win_price: $~p,  exchange: ~p,  bid_id: ~p",
-		[TimeStamp, Cmp, Crid, WinPrice, Exchange, BidId]),
-	statsderl:increment(<<"wins.total">>, 1, 1.0),
-	wins_db:insert(Win),
-	rmq:publish(wins, term_to_binary(Data)),
-	pooler:return_member(wins_pool, self()),
-	{reply, {ok, successful}, State};
-
-handle_call({log_imp, #imp{
-	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange
-} = Imp, Test}, _From, State) ->
+}, Opts}, _From, State) ->
 	Data = #{
 		<<"timestamp">> => TimeStamp,            % time stamp (5 mins)
 		<<"bid_id">> => BidId,                % id
 		<<"cmp">> => Cmp,                        % campaign id
 		<<"crid">> => Crid,                        % creative id
-		<<"exchange">> => Exchange                % exchange
+		<<"exchange">> => Exchange,                % exchange
+		<<"win_price">> => WinPrice                % win price (CPI)
 	},
-	case Test of
-		<<"1">> ->
-			ok;
-		_ ->
-			?INFO("WINS SERVER: Imp -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p",
-				[TimeStamp, Cmp, Crid, Exchange, BidId]),
-			statsderl:increment(<<"imps.total">>, 1, 1.0),
-			wins_db:insert(Imp),
-			rmq:publish(imps, term_to_binary(Data))
-	end,
+	?INFO("WINS SERVER: Win -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  win_price: $~p,  exchange: ~p,  bid_id: ~p",
+		[TimeStamp, Cmp, Crid, WinPrice, Exchange, BidId]),
+	log_internal(wins, Data, Opts),
 	pooler:return_member(wins_pool, self()),
 	{reply, {ok, successful}, State};
 
+handle_call({log_imp, #imp{
+	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange
+}, Opts}, _From, State) ->
+	Data = #{
+		<<"timestamp">> => TimeStamp,           % time stamp (5 mins)
+		<<"bid_id">> => BidId,                    % id
+		<<"cmp">> => Cmp,                       % campaign id
+		<<"crid">> => Crid,                     % creative id
+		<<"exchange">> => Exchange              % exchange
+	},
+	?INFO("WINS SERVER: Imp -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p",
+		[TimeStamp, Cmp, Crid, Exchange, BidId]),
+	log_internal(imps, Data, Opts),
+	[{_, CreativeMap} | _] = ets:lookup(creatives, {Cmp, Crid}),
+	Ad = case tk_maps:get([<<"class">>], CreativeMap) of
+			 <<"html5">> ->
+				 Html0 = tk_maps:get([<<"html">>], CreativeMap),
+				 ClickTaq = Opts#opts.clicktag,
+				 <<Html0/binary, "&ct=", ClickTaq/binary>>;
+			 <<"banner">> ->
+				 tk_maps:get([<<"path">>], CreativeMap);
+			 _ ->
+				 ?ERROR("WINS SERVER: Bad creative type [cmp: ~p,  crid: ~p]", [Cmp, Crid]),
+				 ok
+		 end,
+	pooler:return_member(wins_pool, self()),
+	{reply, {ok, Ad}, State};
+
 handle_call({log_click, #click{
 	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange
-	} = Click, Test}, _From, State) ->
+}, Opts}, _From, State) ->
 	Data = #{
-		<<"timestamp">> => TimeStamp,    		% time stamp (5 mins)
-		<<"bid_id">> => BidId,          		% id
-		<<"cmp">> => Cmp,                		% campaign id
-		<<"crid">> => Crid,                		% creative id
-		<<"exchange">> => Exchange				% exchange
+		<<"timestamp">> => TimeStamp,           % time stamp (5 mins)
+		<<"bid_id">> => BidId,                  % id
+		<<"cmp">> => Cmp,                       % campaign id
+		<<"crid">> => Crid,                     % creative id
+		<<"exchange">> => Exchange              % exchange
 	},
 	?INFO("WINS SERVER: Click -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p",
 		[TimeStamp, Cmp, Crid, Exchange, BidId]),
-	case Test of
-		<<"1">> ->
-			ok;
-		_ ->
-			?INFO("WINS SERVER: Click -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p",
-				[TimeStamp, Cmp, Crid, Exchange, BidId]),
-			statsderl:increment(<<"clicks.total">>, 1, 1.0),
-			wins_db:insert(Click),
-			rmq:publish(clicks, term_to_binary(Data))
-	end,
+			log_internal(clicks, Data, Opts),
 	[{_, CreativeMap} | _] = ets:lookup(creatives, {Cmp, Crid}),
-	tk_lib:echo1(cm, CreativeMap),
 	Redirect = tk_maps:get([<<"ctrurl">>], CreativeMap),
 	pooler:return_member(wins_pool, self()),
 	{reply, {ok, Redirect}, State};
@@ -166,3 +163,24 @@ try_get_worker(N) ->
 		W ->
 			{ok, W}
 	end.
+
+
+log_internal(_, _, #opts{test = true}) ->
+	ok;
+log_internal(Topic, Data, #opts{test = false}) ->
+	TopicBin = atom_to_binary(Topic, latin1),
+	statsderl:increment(<<TopicBin/binary, ".total">>, 1, 1.0),
+	wins_db:insert(Topic, Data),
+	rmq:publish(Topic, term_to_binary(Data)).
+
+
+parse_opts([]) ->
+	#opts{};
+parse_opts(Opts) ->
+	parse_opts(Opts, #opts{}).
+parse_opts([], R) ->
+	R;
+parse_opts([{test, Test} | T], R) ->
+	parse_opts(T ,R#opts{test = Test});
+parse_opts([{clicktag, ClickTag} | T], R) ->
+	parse_opts(T ,R#opts{clicktag = ClickTag}).

@@ -38,6 +38,11 @@
 %%%    RECORDS & TYPES	   %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+-record(opts, {
+	test = false,
+	clicktag = <<"">>
+}).
+
 -record(win, {
 	bid_id,
 	cmp,

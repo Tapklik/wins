@@ -7,7 +7,7 @@
 -include("lager.hrl").
 
 
--export([start_link/0, insert/1, get/1]).
+-export([start_link/0, insert/2, get/1]).
 
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
 	terminate/2, code_change/3]).
@@ -27,12 +27,13 @@
 start_link() ->
 	gen_server:start_link(?MODULE, [], []).
 
-insert(#win{
-	cmp = Cmp,
-	crid = Crid,
-	timestamp = Ts,
-	exchange = Exchange,
-	win_price = WinPrice}) ->
+
+insert(wins, #{
+	<<"cmp">> := Cmp,
+	<<"crid">> := Crid,
+	<<"timestamp">> := Ts,
+	<<"exchange">> := Exchange,
+	<<"win_price">> := WinPrice}) ->
 	Key = {Cmp, Crid, Ts, Exchange},
 	case ets:member(wins_db, Key) of
 		false ->
@@ -41,12 +42,30 @@ insert(#win{
 	end,
 	ets:update_counter(wins_db, Key, {3, WinPrice}),
 	ets:update_counter(wins_db, Key, {4, 1});
-insert(#click{
-	bid_id = BidId,
-	cmp = Cmp,
-	crid = Crid,
-	timestamp = Ts,
-	exchange = Exchange}) ->
+
+insert(imps, #{
+	<<"bid_id">> := BidId,
+	<<"cmp">> := Cmp,
+	<<"crid">> := Crid,
+	<<"timestamp">> := Ts,
+	<<"exchange">> := Exchange}) ->
+	Key = {Cmp, Crid, Ts, Exchange},
+	try
+		ets:update_counter(wins_db, Key, {5, 1})
+	catch
+		_:_ ->
+			ets:insert(wins_db, {Key, time_server:get_datehour(), 0, 0, 1, 0, 0}),
+			?ERROR("WINS REPORTS: There was no imp data for BidId: ~p (Cmp: ~p, Crid: ~p, Ts: ~p)",
+				[BidId, Cmp, Crid, Ts]),
+			ok
+	end;
+
+insert(clicks, #{
+	<<"bid_id">> := BidId,
+	<<"cmp">> := Cmp,
+	<<"crid">> := Crid,
+	<<"timestamp">> := Ts,
+	<<"exchange">> := Exchange}) ->
 	Key = {Cmp, Crid, Ts, Exchange},
 	try
 		ets:update_counter(wins_db, Key, {6, 1})
@@ -56,7 +75,11 @@ insert(#click{
 			?ERROR("WINS REPORTS: There was no click data for BidId: ~p (Cmp: ~p, Crid: ~p, Ts: ~p)",
 				[BidId, Cmp, Crid, Ts]),
 			ok
-	end.
+	end;
+
+insert(D, Data) -> tk_lib:echo1(d,D),
+	?ERROR("WINS REPORTS: Error inserting to db. Malformed data! (Data: ~p)", [Data]).
+
 
 get(_Qs) ->
 	%% TODO add Qs parameters and checking

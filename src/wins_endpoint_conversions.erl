@@ -6,7 +6,7 @@
 %%% @end
 %%% Created : 02. Apr 2018 11:22 AM
 %%%-------------------------------------------------------------------
--module(wins_conversions_http_handler).
+-module(wins_endpoint_conversions).
 -author("adi").
 
 -include("wins_global.hrl").
@@ -47,7 +47,7 @@ handle_get(Req, State) ->
 			   },
 			   case check_valid_conversion(ConversionNotification) of
 				   valid when Test == <<"0">> ->
-					   case wins_server:log_win_conversion(ConversionNotification) of
+					   case wins_server:log_conversion(ConversionNotification) of
 						   {ok, _} ->
 							   "Success";
 						   _ ->

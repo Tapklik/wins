@@ -1,4 +1,4 @@
--module(wins_http_handler).
+-module(wins_endpoint_wins).
 
 -include("wins_global.hrl").
 -include("lager.hrl").
@@ -30,7 +30,7 @@ handle_get(Req, State) ->
 			   Crid = cowboy_req:binding(crid, Req),
 
 			   QsVals = cowboy_req:parse_qs(Req),
-			   Test = proplists:get_value(<<"test">>, QsVals, <<"0">>),
+			   Test = is_test(proplists:get_value(<<"test">>, QsVals)),
 			   Exchange = proplists:get_value(<<"x">>, QsVals, <<"1">>),
 
 			   WinNotification1 = #win{
@@ -45,25 +45,14 @@ handle_get(Req, State) ->
 			   WinNotification2 = wins_decrypt:decrypt(WinNotification1, Exchange),
 
 			   case check_valid_win(WinNotification2) of
-				   valid when Test == <<"0">> ->
-					   case wins_server:log_win(WinNotification2) of
+				   valid ->
+					   case wins_server:log_win(WinNotification2, [{test, Test}]) of
 						   {ok, _} ->
 							   "Success";
 						   _ ->
 							   statsderl:increment(<<"wins.error">>, 1, 1.0),
 							   "Error: invalid call"
 					   end;
-				   valid when Test == <<"1">> ->
-					   ?INFO("WINS SERVER (TEST): Win -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  win_price: ~p,  exchange: ~p,  bid_id: ~p",
-						   [
-							   WinNotification2#win.timestamp,
-							   WinNotification2#win.cmp,
-							   WinNotification2#win.crid,
-							   WinNotification2#win.win_price,
-							   WinNotification2#win.exchange,
-							   WinNotification2#win.bid_id
-						   ]),
-					   "Success";
 				   {invalid, Error} ->
 					   statsderl:increment(<<"wins.error">>, 1, 1.0),
 					   ?ERROR("WINS SERVER: Win notifications error [Req: ~p]. (Error: ~p)", [Req, Error]),
@@ -85,6 +74,11 @@ handle_get(Req, State) ->
 %%%%%%%%%%%%%%%%%%%%%%
 %%%    INTERNAL    %%%
 %%%%%%%%%%%%%%%%%%%%%%
+
+is_test(<<"1">>) ->
+	true;
+is_test(_) ->
+	false.
 
 check_valid_win(#win{bid_id = undefined}) ->
 	{invalid, <<"invalid bid_id">>};

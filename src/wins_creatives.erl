@@ -103,7 +103,8 @@ get_and_save_creatives(CmpConfig) ->
 				<<"h">> => tk_maps:get([<<"h">>], C),
 				<<"w">> => tk_maps:get([<<"w">>], C),
 				<<"ctrurl">> => get_ctrurl(CmpCtrUrl, tk_maps:get([<<"ctrurl">>], C)),
-				<<"path">> => tk_maps:get([<<"path">>], C)
+				<<"path">> => tk_maps:get([<<"path">>], C),
+				<<"html">> => tk_maps:get([<<"html">>], C)
 			},
 			ets:insert(creatives, {K, V})
 		end
@@ -112,7 +113,7 @@ get_and_save_creatives(CmpConfig) ->
 
 
 get_ctrurl(CmpCtrUrl, Default) when
-	CmpCtrUrl == undefined orelse CmpCtrUrl == <<"">> orelse CmpCtrUrl == <<"null">> ->
+	CmpCtrUrl == undefined orelse CmpCtrUrl == <<"">> orelse CmpCtrUrl == null ->
 	Default;
 get_ctrurl(CmpCtrUrl, _) ->
 	CmpCtrUrl.

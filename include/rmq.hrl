@@ -35,7 +35,7 @@
 		topic = <<"config.general">>,
 		logging = true,
 		func = fun(P) -> wins_creatives:load_cmp_config(P) end,
-		pool_size = 10}
+		pool_size = 5}
 ]).
 -define(RMQ_PUBLISHERS, [
 	#publisher{
@@ -55,5 +55,5 @@
 		exchange = <<"wins">>,
 		topic = <<"wins.clicks">>,
 		logging = true,
-		pool_size = 4}
+		pool_size = 5}
 ]).
