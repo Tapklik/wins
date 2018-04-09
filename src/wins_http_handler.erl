@@ -34,7 +34,7 @@ handle_get(Req, State) ->
 			   Exchange = proplists:get_value(<<"x">>, QsVals, <<"1">>),
 
 			   WinNotification1 = #win{
-				   bid_id = proplists:get_value(<<"bidid">>, QsVals, undefined),
+				   bid_id = proplists:get_value(<<"b">>, QsVals, undefined),
 				   cmp = Cmp,
 				   crid = Crid,
 				   timestamp = binary_to_integer(proplists:get_value(<<"ts">>, QsVals, 0)),
