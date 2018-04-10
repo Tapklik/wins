@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 
+## [0.3.0] - 2018-04-10
+### Added
+- Endpoints for conversions and clicks
+- Local DB as a backup and debugging
+- Added metrics and logging
+- Serving of ads
+
+### Changed
+
+### Fixed
+
+### Removed
+
+
 ## [0.2.2] - 2018-03-31
 ### Added
 - Counters for wins
