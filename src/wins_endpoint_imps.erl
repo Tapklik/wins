@@ -50,9 +50,7 @@ handle_get(Req, State) ->
 				   ClickTag = proplists:get_value(<<"ct">>, QsVals, <<"">>),
 				   case wins_server:log_imp(Imp, [{clicktag, ClickTag}, {test, Test}]) of
 					   {ok, Ad} ->
-						   cowboy_req:reply(302, #{
-							   <<"Location">> => Ad
-						   }, Req),
+						   cowboy_req:reply(200, #{<<"content-type">> => <<"text/html">>}, Ad, Req),
 						   stop;
 					   {error, Error} ->
 						   statsderl:increment(<<"imps.error">>, 1, 1.0),
@@ -73,6 +71,7 @@ handle_get(Req, State) ->
 				   ?ERROR("WINS SERVER: Imp notifications error [Req: ~p]. (Error: ~p)", [Req, Error]),
 				   "Error: invalid call"
 		   end,
+	cowboy_req:set_resp_headers(#{<<"Content-Type">> => <<"text/html">>}, Req),
 	{Resp, Req, State}.
 
 %%%%%%%%%%%%%%%%%%%%%%

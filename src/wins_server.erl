@@ -97,8 +97,12 @@ handle_call({log_imp, #imp{
 	Ad = case tk_maps:get([<<"class">>], CreativeMap) of
 			 <<"html5">> ->
 				 Html0 = tk_maps:get([<<"html">>], CreativeMap),
+				 H = integer_to_binary(tk_maps:get([<<"h">>], CreativeMap)),
+				 W = integer_to_binary(tk_maps:get([<<"w">>], CreativeMap)),
 				 ClickTaq = Opts#opts.clicktag,
-				 <<Html0/binary, "&ct=", ClickTaq/binary>>;
+				 Html1 = <<Html0/binary, "?ct=", ClickTaq/binary>>,
+			 <<"<iframe src='", Html1/binary,"' marginwidth='0' marginheight='0' align='top' scrolling='no' frameborder='0'"
+			 , "hspace='0' vspace='0' height='", H/binary, "' width='", W/binary, "'></iframe>">>;
 			 <<"banner">> ->
 				 tk_maps:get([<<"path">>], CreativeMap);
 			 _ ->
