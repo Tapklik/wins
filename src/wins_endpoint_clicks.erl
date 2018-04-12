@@ -1,6 +1,6 @@
 -module(wins_endpoint_clicks).
 
--include("wins_global.hrl").
+-include("global.hrl").
 -include("lager.hrl").
 
 -export([
@@ -29,6 +29,7 @@ handle_get(Req, State) ->
 	Crid = cowboy_req:binding(crid, Req),
 	QsVals = cowboy_req:parse_qs(Req),
 	Test = is_test(proplists:get_value(<<"test">>, QsVals)),
+	Redirect = proplists:get_value(<<"r">>, QsVals, <<"">>),
 	Click = #click{
 		cmp = Cmp,
 		crid = Crid,
@@ -38,7 +39,7 @@ handle_get(Req, State) ->
 	},
 	case check_valid_click(Click) of
 		valid ->
-			case wins_server:log_click(Click, [{test, Test}]) of
+			case wins_server:log_click(Click, [{test, Test}, {redirect, Redirect}]) of
 				{ok, null} ->
 					statsderl:increment(<<"clicks.error">>, 1, 1.0),
 					?ERROR("WINS SERVER: Click notifications error [Req: ~p]. (Error: No ctrurl set!!)", [Req]),

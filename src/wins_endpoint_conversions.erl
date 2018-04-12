@@ -9,7 +9,7 @@
 -module(wins_endpoint_conversions).
 -author("adi").
 
--include("wins_global.hrl").
+-include("global.hrl").
 -include("lager.hrl").
 
 -export([

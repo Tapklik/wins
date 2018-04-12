@@ -1,6 +1,6 @@
 -module(wins_endpoint_wins).
 
--include("wins_global.hrl").
+-include("global.hrl").
 -include("lager.hrl").
 
 -export([

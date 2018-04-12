@@ -2,7 +2,7 @@
 
 -behaviour(gen_server).
 
--include("wins_global.hrl").
+-include("global.hrl").
 -include("rmq.hrl").
 -include("lager.hrl").
 

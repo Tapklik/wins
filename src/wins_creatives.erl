@@ -2,7 +2,7 @@
 
 -behaviour(gen_server).
 
--include("wins_global.hrl").
+-include("global.hrl").
 -include("lager.hrl").
 
 -export([start_link/0]).

@@ -12,6 +12,9 @@
 -define(ENV(Key), application:get_env(?APPLICATION, Key, [])).
 -define(ENV(Key, Default), application:get_env(?APPLICATION, Key, Default)).
 
+-define(RMQ_HOST, ?ENV(rmq_host, "localhost")).
+
+
 
 %% POOLER SETTINGS
 -define(POOL_COUNT, 200).
@@ -40,7 +43,8 @@
 
 -record(opts, {
 	test = false,
-	clicktag = <<"">>
+	clicktag = <<"">>,
+	redirect = <<"">>
 }).
 
 -record(win, {

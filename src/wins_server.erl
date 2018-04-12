@@ -2,7 +2,7 @@
 
 -behaviour(gen_server).
 
--include("wins_global.hrl").
+-include("global.hrl").
 -include("lager.hrl").
 
 -export([start_link/0]).
@@ -122,11 +122,13 @@ handle_call({log_click, #click{
 		<<"crid">> => Crid,                     % creative id
 		<<"exchange">> => Exchange              % exchange
 	},
-	?INFO("WINS SERVER: Click -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p",
-		[TimeStamp, Cmp, Crid, Exchange, BidId]),
-			log_internal(clicks, Data, Opts),
+	log_internal(clicks, Data, Opts),
 	[{_, CreativeMap} | _] = ets:lookup(creatives, {Cmp, Crid}),
 	Redirect = tk_maps:get([<<"ctrurl">>], CreativeMap),
+	AdditionalRediret = Opts#opts.redirect,
+	?INFO("WINS SERVER: Click -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p] ~n
+	[CTR: ~p, Redirect#1: ~p]", [TimeStamp, Cmp, Crid, Exchange, BidId, Redirect, AdditionalRediret]),
+	% TODO add second redirect
 	pooler:return_member(wins_pool, self()),
 	{reply, {ok, Redirect}, State};
 
@@ -186,5 +188,7 @@ parse_opts([], R) ->
 	R;
 parse_opts([{test, Test} | T], R) ->
 	parse_opts(T ,R#opts{test = Test});
+parse_opts([{redirect, Redirect} | T], R) ->
+	parse_opts(T ,R#opts{redirect = Redirect});
 parse_opts([{clicktag, ClickTag} | T], R) ->
 	parse_opts(T ,R#opts{clicktag = ClickTag}).

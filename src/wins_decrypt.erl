@@ -1,6 +1,6 @@
 -module(wins_decrypt).
 
--include("wins_global.hrl").
+-include("global.hrl").
 -include("lager.hrl").
 -include_lib("eunit/include/eunit.hrl").
 

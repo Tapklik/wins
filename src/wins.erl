@@ -2,7 +2,7 @@
 
 -behaviour(application).
 
--include("wins_global.hrl").
+-include("global.hrl").
 -include("rmq.hrl").
 -include("lager.hrl").
 
