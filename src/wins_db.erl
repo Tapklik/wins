@@ -55,7 +55,7 @@ insert(imps, #{
 	catch
 		_:_ ->
 			ets:insert(wins_db, {Key, time_server:get_datehour(), 0, 0, 1, 0, 0}),
-			?ERROR("WINS REPORTS: There was no imp data for BidId: ~p (Cmp: ~p, Crid: ~p, Ts: ~p)",
+			?WARN("WINS REPORTS: There was no imp data for BidId: ~p (Cmp: ~p, Crid: ~p, Ts: ~p)",
 				[BidId, Cmp, Crid, Ts]),
 			ok
 	end;
@@ -72,7 +72,7 @@ insert(clicks, #{
 	catch
 		_:_ ->
 			ets:insert(wins_db, {Key, time_server:get_datehour(), 0, 0, 0, 1, 0}),
-			?ERROR("WINS REPORTS: There was no click data for BidId: ~p (Cmp: ~p, Crid: ~p, Ts: ~p)",
+			?WARN("WINS REPORTS: There was no click data for BidId: ~p (Cmp: ~p, Crid: ~p, Ts: ~p)",
 				[BidId, Cmp, Crid, Ts]),
 			ok
 	end;

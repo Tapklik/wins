@@ -99,7 +99,7 @@ handle_call({log_imp, #imp{
 				 Html0 = tk_maps:get([<<"html">>], CreativeMap),
 				 H = integer_to_binary(tk_maps:get([<<"h">>], CreativeMap)),
 				 W = integer_to_binary(tk_maps:get([<<"w">>], CreativeMap)),
-				 ClickTaq = Opts#opts.clicktag,
+				 ClickTaq = tk_lib:escape_uri(Opts#opts.clicktag),
 				 Html1 = <<Html0/binary, "?ct=", ClickTaq/binary>>,
 			 <<"<iframe src='", Html1/binary,"' marginwidth='0' marginheight='0' align='top' scrolling='no' frameborder='0'"
 			 , "hspace='0' vspace='0' height='", H/binary, "' width='", W/binary, "'></iframe>">>;
@@ -126,8 +126,8 @@ handle_call({log_click, #click{
 	[{_, CreativeMap} | _] = ets:lookup(creatives, {Cmp, Crid}),
 	Redirect = tk_maps:get([<<"ctrurl">>], CreativeMap),
 	AdditionalRediret = Opts#opts.redirect,
-	?INFO("WINS SERVER: Click -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p] ~n
-	[CTR: ~p, Redirect#1: ~p]", [TimeStamp, Cmp, Crid, Exchange, BidId, Redirect, AdditionalRediret]),
+	?INFO("WINS SERVER: Click -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p] [CTR: ~p, Redirect#1: ~p]",
+		[TimeStamp, Cmp, Crid, Exchange, BidId, Redirect, AdditionalRediret]),
 	% TODO add second redirect
 	pooler:return_member(wins_pool, self()),
 	{reply, {ok, Redirect}, State};

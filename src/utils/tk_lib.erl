@@ -12,9 +12,11 @@
 %% API
 -export([read_file/1]).
 -export([uuid4/0]).
+-export([rand/1]).
 -export([echo1/2, echo2/1]).
 -export([writeout/2, writeout/6]).
--export([iso_timestamp/1, to_timestamp/1, tdiff_seconds/2]).
+-export([timestamp/0]).
+-export([escape_uri/1]).
 
 -define(VARIANT10, 2#10).
 -define(MAX_UNSIGNED_INT_32, 4294967296).
@@ -35,6 +37,15 @@ uuid4() ->
 	Str = io_lib:format("~8.16.0b-~4.16.0b-4~3.16.0b-~4.16.0b-~12.16.0b",
 		[A, B, C band 16#0fff, D band 16#3fff bor 16#8000, E]),
 	list_to_binary(Str).
+
+rand(K) ->
+	Rand = statsderl_utils:random(?MAX_UNSIGNED_INT_32),
+	case Rand =< K * ?MAX_UNSIGNED_INT_32 of
+		true ->
+			true;
+		false ->
+			false
+	end.
 
 
 
@@ -68,20 +79,49 @@ writeout(A1, A2, A3, A4, A5, A6) ->
 		io_lib:fwrite("\n~p;~p;~p;~p;~p;~p", [A1, A2, A3, A4, A5, A6]), [append]).
 
 %%------------TIME---------------------------------------
-iso_timestamp(TS) ->
-	{{Year, Month, Day}, {Hour, Minute, Second}} = calendar:now_to_local_time(TS),
+timestamp() ->
+	{{Year, Month, Day}, {Hour, Minute, Second}} = calendar:now_to_local_time(erlang:timestamp()),
 	lists:flatten(io_lib:format("~4..0w-~2..0w-~2..0wT~2..0w:~2..0w:~2..0w",[Year,Month,Day,Hour,Minute,Second])).
-
-to_timestamp({{Year,Month,Day},{Hours,Minutes,Seconds}}) ->
-	(calendar:datetime_to_gregorian_seconds(
-		{{Year,Month,Day},{Hours,Minutes,Seconds}}
-	) - 62167219200)*1000000.
-
-tdiff_seconds(T1, T2) ->
-	round(abs(timer:now_diff(T1, T2) / 1000000)).
 
 t() ->
 	erlang:monotonic_time().
 
 tdiff(A, B) ->
 	B - A.
+
+%%------------EXCAPE URI---------------------------------
+
+escape_uri(<<C:8, Cs/binary>>) when C >= $a, C =< $z ->
+	EscUri = escape_uri(Cs),
+	<<C, EscUri/binary>>;
+escape_uri(<<C:8, Cs/binary>>) when C >= $A, C =< $Z ->
+	EscUri = escape_uri(Cs),
+	<<C, EscUri/binary>>;
+escape_uri(<<C:8, Cs/binary>>) when C >= $0, C =< $9 ->
+	EscUri = escape_uri(Cs),
+	<<C, EscUri/binary>>;
+escape_uri(<<C:8, Cs/binary>>) when C == $. ->
+	EscUri = escape_uri(Cs),
+	<<C, EscUri/binary>>;
+escape_uri(<<C:8, Cs/binary>>) when C == $- ->
+	EscUri = escape_uri(Cs),
+	<<C, EscUri/binary>>;
+escape_uri(<<C:8, Cs/binary>>) when C == $_ ->
+	EscUri = escape_uri(Cs),
+	<<C, EscUri/binary>>;
+escape_uri(<<C:8, Cs/binary>>) ->
+	EscByte = escape_byte(C),
+	EscUri = escape_uri(Cs),
+	<<EscByte/binary, EscUri/binary>>;
+escape_uri(<<>>) ->
+	<<>>.
+
+escape_byte(C) when C >= 0, C =< 255 ->
+	Hex1 = hex_digit(C bsr 4),
+	Hex2 = hex_digit(C band 15),
+	<<"%", Hex1, Hex2>>.
+
+hex_digit(N) when N >= 0, N =< 9 ->
+	N + $0;
+hex_digit(N) when N > 9, N =< 15 ->
+	N + $a - 10.

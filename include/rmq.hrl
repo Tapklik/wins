@@ -42,13 +42,13 @@
 		name = wins,
 		exchange = <<"wins">>,
 		topic = <<"wins.wins">>,
-		logging = true,
+		logging = false,
 		pool_size = 50},
 	#publisher{
 		name = imps,
 		exchange = <<"wins">>,
 		topic = <<"wins.imps">>,
-		logging = true,
+		logging = false,
 		pool_size = 50},
 	#publisher{
 		name = clicks,

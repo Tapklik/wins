@@ -44,9 +44,9 @@ handle_get(Req, State) ->
 					statsderl:increment(<<"clicks.error">>, 1, 1.0),
 					?ERROR("WINS SERVER: Click notifications error [Req: ~p]. (Error: No ctrurl set!!)", [Req]),
 					"Error: invalid call";
-				{ok, Redirect} ->
+				{ok, R} ->
 					cowboy_req:reply(302, #{
-						<<"Location">> => Redirect
+						<<"Location">> => R
 					}, Req);
 				_ ->
 					statsderl:increment(<<"clicks.error">>, 1, 1.0),
