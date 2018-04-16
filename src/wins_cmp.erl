@@ -10,7 +10,7 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
 	terminate/2, code_change/3]).
 
--export([load_cmp_config/1, get_cmp_fees/1]).
+-export([load_cmp_config/1, get_cmp_fees/1, get_cmp_account/1]).
 
 
 -record(state, {
@@ -41,8 +41,21 @@ load_cmp_config(CmpConfigJson) ->
 
 
 get_cmp_fees(Cmp) ->
-	try_ets_lookup(campaigns, Cmp, {error, not_found}).
+	case try_ets_lookup(campaigns, Cmp, not_found) of
+		{_, _, Fees} ->
+			{ok, Fees};
+		_ ->
+			{error, not_found}
+	end.
 
+
+get_cmp_account(Cmp) ->
+	case try_ets_lookup(campaigns, Cmp, not_found) of
+		{_, AccId, _} ->
+			{ok, AccId};
+		_ ->
+			{ok, <<"">>}
+	end.
 
 %%%%%%%%%%%%%%%%%%%%%%
 %%%    CALLBACKS   %%%
@@ -100,7 +113,8 @@ code_change(_OldVsn, State, _Extra) ->
 get_and_save_campaigns_and_creatives(CmpConfig) ->
 	Cmp = tk_maps:get([<<"cmp">>], CmpConfig),
 	CmpFees = tk_maps:get([<<"config">>, <<"fees">>], CmpConfig, undefined),
-	ets:insert(campaigns, {Cmp, CmpFees}),
+	AccId = tk_maps:get([<<"config">>, <<"acc">>], CmpConfig, undefined),
+	ets:insert(campaigns, {Cmp, AccId,CmpFees}),
 	CmpCtrUrl = tk_maps:get([<<"config">>, <<"config">>, <<"ctrurl">>], CmpConfig, undefined),
 	CreativeList = tk_maps:get([<<"config">>, <<"creatives">>], CmpConfig, []),
 	lists:foreach(

@@ -66,9 +66,9 @@ init([]) ->
 handle_call({log_win, #win{
 	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange, win_price = WinPrice
 }, Opts}, _From, State) ->
-
+	{ok, AccId} = wins_cmp:get_cmp_account(Cmp),
 	Spend = case wins_cmp:get_cmp_fees(Cmp) of
-		{_, Fees} ->
+		{ok, Fees} ->
 			VariableFees = tk_maps:get([<<"variable">>], Fees),
 			FixedFees = tk_maps:get([<<"fixed">>], Fees),
 			trunc(WinPrice + (VariableFees / 100 * WinPrice) + FixedFees);
@@ -96,6 +96,7 @@ handle_call({log_win, #win{
 handle_call({log_imp, #imp{
 	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange
 }, Opts}, _From, State) ->
+	{ok, AccId} = wins_cmp:get_cmp_account(Cmp),
 	Data = #{
 		<<"action">> => <<"impression">>,
 		<<"timestamp">> => TimeStamp,           % time stamp (5 mins)
@@ -130,6 +131,7 @@ handle_call({log_imp, #imp{
 handle_call({log_click, #click{
 	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange
 }, Opts}, _From, State) ->
+	{ok, AccId} = wins_cmp:get_cmp_account(Cmp),
 	Data = #{
 		<<"action">> => <<"click">>,
 		<<"timestamp">> => TimeStamp,           % time stamp (5 mins)
