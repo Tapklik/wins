@@ -184,8 +184,7 @@ log_internal(Topic, Data, #opts{test = false}) ->
 	statsderl:increment(<<TopicBin/binary, ".total">>, 1, 1.0),
 	wins_db:insert(Topic, Data),
 	Data2 = jsx:encode(Data),
-	Topic = <<"wins">>,
-	publish_to_kafka(Topic, Data2).
+	publish_to_kafka(?KAFKA_WINS_TOPIC, Data2).
 
 
 publish_to_kafka(Topic, Load) ->

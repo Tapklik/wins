@@ -13,7 +13,7 @@
 -define(ENV(Key, Default), application:get_env(?APPLICATION, Key, Default)).
 
 -define(RMQ_HOST, ?ENV(rmq_host, "localhost")).
-
+-define(KAFKA_WINS_TOPIC, <<"wins">>).
 
 
 %% POOLER SETTINGS
