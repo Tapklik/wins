@@ -66,16 +66,22 @@ init([]) ->
 handle_call({log_win, #win{
 	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange, win_price = WinPrice
 }, Opts}, _From, State) ->
+	Fees = wins_cmp:get_cmp_fees(Cmp),
+	VariableFees = tk_maps:get([<<"variable">>], Fees),
+	FixedFees = tk_maps:get([<<"fixed">>], Fees),
+	Spend = trunc(WinPrice + (VariableFees / 100 * WinPrice) + FixedFees),
 	Data = #{
-		<<"timestamp">> => TimeStamp,            % time stamp (5 mins)
-		<<"bid_id">> => BidId,                % id
-		<<"cmp">> => Cmp,                        % campaign id
-		<<"crid">> => Crid,                        % creative id
-		<<"exchange">> => Exchange,                % exchange
-		<<"win_price">> => WinPrice                % win price (CPI)
+		<<"timestamp">> => TimeStamp,           % time stamp (5 mins)
+		<<"bid_id">> => BidId,                	% id
+		<<"cmp">> => Cmp,                     	% campaign id
+		<<"crid">> => Crid,                   	% creative id
+		<<"exchange">> => Exchange,           	% exchange
+		<<"win_price">> => WinPrice,          	% win price (CPI)
+		<<"spend">> => Spend                	% win price (CPI)
 	},
-	?INFO("WINS SERVER: Win -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  win_price: $~p,  exchange: ~p,  bid_id: ~p",
-		[TimeStamp, Cmp, Crid, WinPrice, Exchange, BidId]),
+	?INFO("WINS SERVER: Win -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  price: (buy: $~p / sell: $~p),  exchange: ~p,  bid_id: ~p",
+		[TimeStamp, Cmp, Crid, WinPrice, Spend, Exchange, BidId]),
+	rmq:publish(wins, term_to_binary(Data)),
 	log_internal(wins, Data, Opts),
 	pooler:return_member(wins_pool, self()),
 	{reply, {ok, successful}, State};
@@ -85,7 +91,7 @@ handle_call({log_imp, #imp{
 }, Opts}, _From, State) ->
 	Data = #{
 		<<"timestamp">> => TimeStamp,           % time stamp (5 mins)
-		<<"bid_id">> => BidId,                    % id
+		<<"bid_id">> => BidId,                  % id
 		<<"cmp">> => Cmp,                       % campaign id
 		<<"crid">> => Crid,                     % creative id
 		<<"exchange">> => Exchange              % exchange
@@ -177,7 +183,24 @@ log_internal(Topic, Data, #opts{test = false}) ->
 	TopicBin = atom_to_binary(Topic, latin1),
 	statsderl:increment(<<TopicBin/binary, ".total">>, 1, 1.0),
 	wins_db:insert(Topic, Data),
-	rmq:publish(Topic, term_to_binary(Data)).
+	Data2 = jsx:encode(Data),
+	Topic = <<"wins">>,
+	publish_to_kafka(Topic, Data2).
+
+
+publish_to_kafka(Topic, Load) ->
+	Client = c1,
+	case ?ENV(kafka_enabled) of
+		true ->
+			PartitionFun = fun(_Topic, PartitionsCount, _Key, _Value) ->
+				{ok, crypto:rand_uniform(0, PartitionsCount)}
+						   end,
+			%% TODO Watch for spawning a new function here only for Kafka pub
+			spawn(fun() -> brod:produce(Client, Topic, PartitionFun, <<"">>, Load) end),
+			{ok, published};
+		_ ->
+			{ok, kafka_disabled}
+	end.
 
 
 parse_opts([]) ->

@@ -1,4 +1,4 @@
--module(wins_creatives).
+-module(wins_cmp).
 
 -behaviour(gen_server).
 
@@ -10,7 +10,7 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
 	terminate/2, code_change/3]).
 
--export([load_cmp_config/1]).
+-export([load_cmp_config/1, get_cmp_fees/1]).
 
 
 -record(state, {
@@ -36,9 +36,12 @@ start_link() ->
 -spec(load_cmp_config(CmpConfigJson :: string()) -> {ok, success}).
 load_cmp_config(CmpConfigJson) ->
 	CmpConfig = jsx:decode(CmpConfigJson, [return_maps]),
-	get_and_save_creatives(CmpConfig),
+	get_and_save_campaigns_and_creatives(CmpConfig),
 	{ok, success}.
 
+
+get_cmp_fees(Cmp) ->
+	try_ets_lookup(campaigns, Cmp, not_found).
 
 
 %%%%%%%%%%%%%%%%%%%%%%
@@ -60,6 +63,12 @@ handle_cast(_Request, State) ->
 
 handle_info({init}, State) ->
 	ets:new(creatives, [
+		set,
+		public,
+		named_table,
+		{read_concurrency, true}
+	]),
+	ets:new(campaigns, [
 		set,
 		public,
 		named_table,
@@ -87,9 +96,11 @@ code_change(_OldVsn, State, _Extra) ->
 %% @hidden
 %% Takes creatives from Cmp config and inserts them into ets
 %%
--spec(get_and_save_creatives(CmpConfig :: map()) -> ok).
-get_and_save_creatives(CmpConfig) ->
+-spec(get_and_save_campaigns_and_creatives(CmpConfig :: map()) -> ok).
+get_and_save_campaigns_and_creatives(CmpConfig) ->
 	Cmp = tk_maps:get([<<"cmp">>], CmpConfig),
+	CmpFees = tk_maps:get([<<"fees">>], CmpConfig, undefined),
+	ets:insert(campaigns, {Cmp, CmpFees}),
 	CmpCtrUrl = tk_maps:get([<<"config">>, <<"config">>, <<"ctrurl">>], CmpConfig, undefined),
 	CreativeList = tk_maps:get([<<"config">>, <<"creatives">>], CmpConfig, []),
 	lists:foreach(
@@ -117,3 +128,13 @@ get_ctrurl(CmpCtrUrl, Default) when
 	Default;
 get_ctrurl(CmpCtrUrl, _) ->
 	CmpCtrUrl.
+
+
+%% @hidden
+try_ets_lookup(Table, Key) ->
+	try_ets_lookup(Table, Key, not_found).
+try_ets_lookup(Table, Key, Default) ->
+	case ets:lookup(Table, Key) of
+		[Val | _] -> Val;
+		[] -> Default
+	end.
