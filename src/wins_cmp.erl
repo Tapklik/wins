@@ -41,7 +41,7 @@ load_cmp_config(CmpConfigJson) ->
 
 
 get_cmp_fees(Cmp) ->
-	try_ets_lookup(campaigns, Cmp, not_found).
+	try_ets_lookup(campaigns, Cmp, {error, not_found}).
 
 
 %%%%%%%%%%%%%%%%%%%%%%
@@ -99,7 +99,7 @@ code_change(_OldVsn, State, _Extra) ->
 -spec(get_and_save_campaigns_and_creatives(CmpConfig :: map()) -> ok).
 get_and_save_campaigns_and_creatives(CmpConfig) ->
 	Cmp = tk_maps:get([<<"cmp">>], CmpConfig),
-	CmpFees = tk_maps:get([<<"fees">>], CmpConfig, undefined),
+	CmpFees = tk_maps:get([<<"config">>, <<"fees">>], CmpConfig, undefined),
 	ets:insert(campaigns, {Cmp, CmpFees}),
 	CmpCtrUrl = tk_maps:get([<<"config">>, <<"config">>, <<"ctrurl">>], CmpConfig, undefined),
 	CreativeList = tk_maps:get([<<"config">>, <<"creatives">>], CmpConfig, []),

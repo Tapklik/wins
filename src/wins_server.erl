@@ -66,13 +66,20 @@ init([]) ->
 handle_call({log_win, #win{
 	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange, win_price = WinPrice
 }, Opts}, _From, State) ->
-	Fees = wins_cmp:get_cmp_fees(Cmp),
-	VariableFees = tk_maps:get([<<"variable">>], Fees),
-	FixedFees = tk_maps:get([<<"fixed">>], Fees),
-	Spend = trunc(WinPrice + (VariableFees / 100 * WinPrice) + FixedFees),
+
+	Spend = case wins_cmp:get_cmp_fees(Cmp) of
+		{_, Fees} ->
+			VariableFees = tk_maps:get([<<"variable">>], Fees),
+			FixedFees = tk_maps:get([<<"fixed">>], Fees),
+			trunc(WinPrice + (VariableFees / 100 * WinPrice) + FixedFees);
+		_ -> WinPrice
+	end,
+
 	Data = #{
+		<<"action">> => <<"win">>,
 		<<"timestamp">> => TimeStamp,           % time stamp (5 mins)
 		<<"bid_id">> => BidId,                	% id
+		<<"account">> => AccId,                 % account id
 		<<"cmp">> => Cmp,                     	% campaign id
 		<<"crid">> => Crid,                   	% creative id
 		<<"exchange">> => Exchange,           	% exchange
@@ -90,8 +97,10 @@ handle_call({log_imp, #imp{
 	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange
 }, Opts}, _From, State) ->
 	Data = #{
+		<<"action">> => <<"impression">>,
 		<<"timestamp">> => TimeStamp,           % time stamp (5 mins)
 		<<"bid_id">> => BidId,                  % id
+		<<"account">> => AccId,                 % account id
 		<<"cmp">> => Cmp,                       % campaign id
 		<<"crid">> => Crid,                     % creative id
 		<<"exchange">> => Exchange              % exchange
@@ -122,8 +131,10 @@ handle_call({log_click, #click{
 	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange
 }, Opts}, _From, State) ->
 	Data = #{
+		<<"action">> => <<"click">>,
 		<<"timestamp">> => TimeStamp,           % time stamp (5 mins)
 		<<"bid_id">> => BidId,                  % id
+		<<"account">> => AccId,                 % account id
 		<<"cmp">> => Cmp,                       % campaign id
 		<<"crid">> => Crid,                     % creative id
 		<<"exchange">> => Exchange              % exchange
