@@ -47,13 +47,13 @@ init([]) ->
 		type => worker,
 		modules => [wins_db]
 	},
-	WinsCreatives = #{
-		id => wins_creatives,
-		start => {wins_creatives, start_link, []},
+	WinsCmp = #{
+		id => wins_cmp,
+		start => {wins_cmp, start_link, []},
 		restart => permanent,
 		shutdown => 2000,
 		type => worker,
-		modules => [wins_creatives]
+		modules => [wins_cmp]
 	},
 	VMServer = #{
 		id => vm,
@@ -71,7 +71,7 @@ init([]) ->
 		type => worker,
 		modules => [time_server]
 	},
-	Children = [RmqSup, PoolerSup, 	DBServer, WinsCreatives, VMServer, TimeServer],
+	Children = [RmqSup, PoolerSup, 	DBServer, WinsCmp, VMServer, TimeServer],
 	RestartStrategy = {one_for_one, 10, 300},
 	{ok, {RestartStrategy, Children}}.
 
