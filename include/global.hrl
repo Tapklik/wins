@@ -13,7 +13,7 @@
 -define(ENV(Key, Default), application:get_env(?APPLICATION, Key, Default)).
 
 -define(RMQ_HOST, ?ENV(rmq_host, "localhost")).
--define(STREAM_WINS_TOPIC, <<"wins">>).
+-define(STREAM_WINS_TOPIC, <<"Wins">>).
 
 
 %% POOLER SETTINGS
@@ -49,6 +49,7 @@
 
 -record(win, {
 	bid_id,
+	bidder,
 	cmp,
 	crid,
 	timestamp,

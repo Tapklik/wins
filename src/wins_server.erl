@@ -64,7 +64,7 @@ init([]) ->
 	{ok, #state{}}.
 
 handle_call({log_win, #win{
-	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange, win_price = WinPrice
+	bid_id = BidId, bidder = Bidder, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange, win_price = WinPrice
 }, Opts}, _From, State) ->
 	{ok, AccId} = wins_cmp:get_cmp_account(Cmp),
 	Spend = case wins_cmp:get_cmp_fees(Cmp) of
@@ -79,16 +79,16 @@ handle_call({log_win, #win{
 		<<"action">> => <<"win">>,
 		<<"timestamp">> => TimeStamp,           % time stamp (5 mins)
 		<<"bid_id">> => BidId,                	% id
-		<<"account">> => AccId,                 % account id
+		<<"acc">> => AccId,                 % account id
 		<<"cmp">> => Cmp,                     	% campaign id
 		<<"crid">> => Crid,                   	% creative id
 		<<"exchange">> => Exchange,           	% exchange
 		<<"win_price">> => WinPrice,          	% win price (CPI)
-		<<"spend">> => Spend                	% win price (CPI)
+		<<"spend">> => Spend                	% spend (CPI)
 	},
-	?INFO("WINS SERVER: Win -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  price: (buy: $~p / sell: $~p),  exchange: ~p,  bid_id: ~p",
-		[TimeStamp, Cmp, Crid, WinPrice, Spend, Exchange, BidId]),
-	rmq:publish(wins, term_to_binary(Data)),
+	?INFO("WINS SERVER: Win -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  price: (buy: $~p / sell: $~p),  exchange: ~p,  bidder: ~p, bid_id: ~p",
+		[TimeStamp, Cmp, Crid, WinPrice, Spend, Exchange, Bidder, BidId]),
+	rmq:publish(wins, <<"wins.", Bidder/binary>>, term_to_binary(Data)),
 	log_internal(wins, Data, Opts),
 	pooler:return_member(wins_pool, self()),
 	{reply, {ok, successful}, State};
@@ -101,10 +101,12 @@ handle_call({log_imp, #imp{
 		<<"action">> => <<"impression">>,
 		<<"timestamp">> => TimeStamp,           % time stamp (5 mins)
 		<<"bid_id">> => BidId,                  % id
-		<<"account">> => AccId,                 % account id
+		<<"acc">> => AccId,                 % account id
 		<<"cmp">> => Cmp,                       % campaign id
 		<<"crid">> => Crid,                     % creative id
-		<<"exchange">> => Exchange              % exchange
+		<<"exchange">> => Exchange,             % exchange
+		<<"win_price">> => 0,          			% win price (CPI)
+		<<"spend">> => 0                		% spend (CPI)
 	},
 	?INFO("WINS SERVER: Imp -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p",
 		[TimeStamp, Cmp, Crid, Exchange, BidId]),
@@ -136,10 +138,12 @@ handle_call({log_click, #click{
 		<<"action">> => <<"click">>,
 		<<"timestamp">> => TimeStamp,           % time stamp (5 mins)
 		<<"bid_id">> => BidId,                  % id
-		<<"account">> => AccId,                 % account id
+		<<"acc">> => AccId,                 	% account id
 		<<"cmp">> => Cmp,                       % campaign id
 		<<"crid">> => Crid,                     % creative id
-		<<"exchange">> => Exchange              % exchange
+		<<"exchange">> => Exchange,             % exchange
+		<<"win_price">> => 0,          			% win price (CPI)
+		<<"spend">> => 0                		% spend (CPI)
 	},
 	log_internal(clicks, Data, Opts),
 	[{_, CreativeMap} | _] = ets:lookup(creatives, {Cmp, Crid}),
@@ -200,18 +204,20 @@ log_internal(Topic, #{<<"bid_id">> := BidId} = Data, #opts{test = false}) ->
 
 
 publish_to_stream(Topic, BidId, Load0) ->
-	case ?ENV(stream_enabled) of
-		true ->
-			Load = base64:encode(jsx:encode(Load0)),
-			kinetic:put_record([
-				{<<"Data">>, Load},
-				{<<"PartitionKey">>, BidId},
-				{<<"StreamName">>, Topic}
-			]),
-			{ok, published};
-		_ ->
-			{ok, stream_disabled}
-	end.
+	spawn(
+		fun() ->
+			case ?ENV(stream_enabled) of
+				true ->
+					Load = base64:encode(jsx:encode(Load0)),
+					kinetic:put_record([
+						{<<"Data">>, Load},
+						{<<"PartitionKey">>, BidId},
+						{<<"StreamName">>, Topic}
+					]);
+				_ ->
+					ok
+			end
+		end).
 
 
 parse_opts([]) ->

@@ -41,19 +41,7 @@
 	#publisher{
 		name = wins,
 		exchange = <<"wins">>,
-		topic = <<"wins.wins">>,
+		topic = <<"wins.{bidder_id}">>,
 		logging = false,
-		pool_size = 50},
-	#publisher{
-		name = imps,
-		exchange = <<"wins">>,
-		topic = <<"wins.imps">>,
-		logging = false,
-		pool_size = 50},
-	#publisher{
-		name = clicks,
-		exchange = <<"wins">>,
-		topic = <<"wins.clicks">>,
-		logging = true,
-		pool_size = 20}
+		pool_size = 50}
 ]).
