@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.3.1] - 2018-04-21
+### Added
+- Added Kinetic for Kinesis streaming
+
+### Changed
+
+### Fixed
+
+### Removed
+- Kafka
 
 ## [0.3.0] - 2018-04-10
 ### Added

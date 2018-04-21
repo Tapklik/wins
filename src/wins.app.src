@@ -1,7 +1,7 @@
 %%-*- mode: erlang -*-
 {application, wins, [
 	{description, ""},
-	{vsn, "0.3.0"},
+	{vsn, "0.3.1"},
 	{registered, []},
 	{applications, [
 		kernel,
@@ -15,8 +15,7 @@
 		goldrush,
 		sasl,
 		bertconf,
-		statsderl,
-		brod
+		statsderl
 	]},
 	{included_applications, [pooler]},
 	{mod, {wins, []}},

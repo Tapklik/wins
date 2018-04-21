@@ -192,26 +192,25 @@ try_get_worker(N) ->
 
 log_internal(_, _, #opts{test = true}) ->
 	ok;
-log_internal(Topic, Data, #opts{test = false}) ->
+log_internal(Topic, #{<<"bid_id">> := BidId} = Data, #opts{test = false}) ->
 	TopicBin = atom_to_binary(Topic, latin1),
 	statsderl:increment(<<TopicBin/binary, ".total">>, 1, 1.0),
 	wins_db:insert(Topic, Data),
-	Data2 = jsx:encode(Data),
-	publish_to_kafka(?KAFKA_WINS_TOPIC, Data2).
+	publish_to_stream(?STREAM_WINS_TOPIC, BidId, Data).
 
 
-publish_to_kafka(Topic, Load) ->
-	Client = c1,
-	case ?ENV(kafka_enabled) of
+publish_to_stream(Topic, BidId, Load0) ->
+	case ?ENV(stream_enabled) of
 		true ->
-			PartitionFun = fun(_Topic, PartitionsCount, _Key, _Value) ->
-				{ok, crypto:rand_uniform(0, PartitionsCount)}
-						   end,
-			%% TODO Watch for spawning a new function here only for Kafka pub
-			spawn(fun() -> brod:produce(Client, Topic, PartitionFun, <<"">>, Load) end),
+			Load = base64:encode(jsx:encode(Load0)),
+			kinetic:put_record([
+				{<<"Data">>, Load},
+				{<<"PartitionKey">>, BidId},
+				{<<"StreamName">>, Topic}
+			]),
 			{ok, published};
 		_ ->
-			{ok, kafka_disabled}
+			{ok, stream_disabled}
 	end.
 
 
