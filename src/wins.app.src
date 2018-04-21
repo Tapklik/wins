@@ -15,7 +15,8 @@
 		goldrush,
 		sasl,
 		bertconf,
-		statsderl
+		statsderl,
+		kinetic
 	]},
 	{included_applications, [pooler]},
 	{mod, {wins, []}},
