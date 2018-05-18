@@ -13,7 +13,7 @@
 -define(ENV(Key, Default), application:get_env(?APPLICATION, Key, Default)).
 
 -define(RMQ_HOST, ?ENV(rmq_host, "localhost")).
--define(STREAM_WINS_TOPIC, <<"Wins">>).
+-define(STREAM_WINS_TOPIC, ?ENV(stream_wins_topic, <<"Wins">>)).
 
 
 %% POOLER SETTINGS
