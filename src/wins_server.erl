@@ -229,7 +229,7 @@ relay_click_to_adx(AdxRedirectLink, #click{
 	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange
 }) ->
 	case httpc:request(get, {AdxRedirectLink, []}, [], []) of
-		{ok, {{_, 200, _}, _, _}} ->
+		{ok, _} ->
 			?INFO("WINS SERVER: Click [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p] relayed to Ad Exchange",
 				[TimeStamp, Cmp, Crid, Exchange, BidId]);
 		_ ->
