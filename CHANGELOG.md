@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file.
 
 
 ## [Unreleased]
+- Added httpc call GET for redirect from Google
 
 ## [0.3.1] - 2018-04-21
 ### Added

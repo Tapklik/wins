@@ -149,6 +149,9 @@ handle_call({log_click, #click{
 	[{_, CreativeMap} | _] = ets:lookup(creatives, {Cmp, Crid}),
 	Redirect = tk_maps:get([<<"ctrurl">>], CreativeMap),
 	AdditionalRediret = Opts#opts.redirect,
+	spawn(fun() ->
+		relay_click_to_adx(AdditionalRediret)
+		  end),
 	?INFO("WINS SERVER: Click -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p] [CTR: ~p, Redirect#1: ~p]",
 		[TimeStamp, Cmp, Crid, Exchange, BidId, Redirect, AdditionalRediret]),
 	% TODO add second redirect
@@ -218,6 +221,17 @@ publish_to_stream(Topic, BidId, Load0) ->
 					ok
 			end
 		end).
+
+
+relay_click_to_adx(AdxRedirectLink) ->
+	case httpc:request(get, {AdxRedirectLink, []}, [], []) of
+		{ok, {{_, 200, _}, _, _}} ->
+			?INFO("WINS SERVER: Click [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p] relayed to Ad Exchange",
+				[TimeStamp, Cmp, Crid, Exchange, BidId]);
+		_ ->
+			?ERROR("WINS SERVER: Error relaying click to Ad exchange! (timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p)",
+				[TimeStamp, Cmp, Crid, Exchange, BidId])
+	end.
 
 
 parse_opts([]) ->
