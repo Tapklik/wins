@@ -132,7 +132,7 @@ handle_call({log_imp, #imp{
 
 handle_call({log_click, #click{
 	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange
-}, Opts}, _From, State) ->
+} = Click, Opts}, _From, State) ->
 	{ok, AccId} = wins_cmp:get_cmp_account(Cmp),
 	Data = #{
 		<<"action">> => <<"click">>,
@@ -150,7 +150,7 @@ handle_call({log_click, #click{
 	Redirect = tk_maps:get([<<"ctrurl">>], CreativeMap),
 	AdditionalRediret = Opts#opts.redirect,
 	spawn(fun() ->
-		relay_click_to_adx(AdditionalRediret)
+		relay_click_to_adx(AdditionalRediret, Click)
 		  end),
 	?INFO("WINS SERVER: Click -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p] [CTR: ~p, Redirect#1: ~p]",
 		[TimeStamp, Cmp, Crid, Exchange, BidId, Redirect, AdditionalRediret]),
@@ -223,7 +223,11 @@ publish_to_stream(Topic, BidId, Load0) ->
 		end).
 
 
-relay_click_to_adx(AdxRedirectLink) ->
+relay_click_to_adx(AdxRedirectLink, Click) when is_binary(AdxRedirectLink) ->
+	relay_click_to_adx(binary_to_list(AdxRedirectLink), Click);
+relay_click_to_adx(AdxRedirectLink, #click{
+	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange
+}) ->
 	case httpc:request(get, {AdxRedirectLink, []}, [], []) of
 		{ok, {{_, 200, _}, _, _}} ->
 			?INFO("WINS SERVER: Click [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p] relayed to Ad Exchange",
