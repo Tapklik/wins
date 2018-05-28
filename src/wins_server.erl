@@ -68,23 +68,23 @@ handle_call({log_win, #win{
 }, Opts}, _From, State) ->
 	{ok, AccId} = wins_cmp:get_cmp_account(Cmp),
 	Spend = case wins_cmp:get_cmp_fees(Cmp) of
-		{ok, Fees} ->
-			VariableFees = tk_maps:get([<<"variable">>], Fees),
-			FixedFees = tk_maps:get([<<"fixed">>], Fees),
-			trunc(WinPrice + (VariableFees / 100 * WinPrice) + FixedFees);
-		_ -> WinPrice
-	end,
+				{ok, Fees} ->
+					VariableFees = tk_maps:get([<<"variable">>], Fees),
+					FixedFees = tk_maps:get([<<"fixed">>], Fees),
+					trunc(WinPrice + (VariableFees / 100 * WinPrice) + FixedFees);
+				_ -> WinPrice
+			end,
 
 	Data = #{
 		<<"action">> => <<"win">>,
 		<<"timestamp">> => TimeStamp,           % time stamp (5 mins)
-		<<"bid_id">> => BidId,                	% id
+		<<"bid_id">> => BidId,                    % id
 		<<"acc">> => AccId,                 % account id
-		<<"cmp">> => Cmp,                     	% campaign id
-		<<"crid">> => Crid,                   	% creative id
-		<<"exchange">> => Exchange,           	% exchange
-		<<"win_price">> => WinPrice,          	% win price (CPI)
-		<<"spend">> => Spend                	% spend (CPI)
+		<<"cmp">> => Cmp,                        % campaign id
+		<<"crid">> => Crid,                    % creative id
+		<<"exchange">> => Exchange,            % exchange
+		<<"win_price">> => WinPrice,            % win price (CPI)
+		<<"spend">> => Spend                    % spend (CPI)
 	},
 	?INFO("WINS SERVER: Win -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  price: (buy: $~p / sell: $~p),  exchange: ~p,  bidder: ~p, bid_id: ~p",
 		[TimeStamp, Cmp, Crid, WinPrice, Spend, Exchange, Bidder, BidId]),
@@ -105,8 +105,8 @@ handle_call({log_imp, #imp{
 		<<"cmp">> => Cmp,                       % campaign id
 		<<"crid">> => Crid,                     % creative id
 		<<"exchange">> => Exchange,             % exchange
-		<<"win_price">> => 0,          			% win price (CPI)
-		<<"spend">> => 0                		% spend (CPI)
+		<<"win_price">> => 0,                    % win price (CPI)
+		<<"spend">> => 0                        % spend (CPI)
 	},
 	?INFO("WINS SERVER: Imp -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p",
 		[TimeStamp, Cmp, Crid, Exchange, BidId]),
@@ -119,8 +119,8 @@ handle_call({log_imp, #imp{
 				 W = integer_to_binary(tk_maps:get([<<"w">>], CreativeMap)),
 				 ClickTaq = tk_lib:escape_uri(Opts#opts.clicktag),
 				 Html1 = <<Html0/binary, "?ct=", ClickTaq/binary>>,
-			 <<"<iframe src='", Html1/binary,"' marginwidth='0' marginheight='0' align='top' scrolling='no' frameborder='0'"
-			 , "hspace='0' vspace='0' height='", H/binary, "' width='", W/binary, "'></iframe>">>;
+				 <<"<iframe src='", Html1/binary, "' marginwidth='0' marginheight='0' align='top' scrolling='no' frameborder='0'"
+					 , "hspace='0' vspace='0' height='", H/binary, "' width='", W/binary, "'></iframe>">>;
 			 <<"banner">> ->
 				 tk_maps:get([<<"path">>], CreativeMap);
 			 _ ->
@@ -138,12 +138,12 @@ handle_call({log_click, #click{
 		<<"action">> => <<"click">>,
 		<<"timestamp">> => TimeStamp,           % time stamp (5 mins)
 		<<"bid_id">> => BidId,                  % id
-		<<"acc">> => AccId,                 	% account id
+		<<"acc">> => AccId,                    % account id
 		<<"cmp">> => Cmp,                       % campaign id
 		<<"crid">> => Crid,                     % creative id
 		<<"exchange">> => Exchange,             % exchange
-		<<"win_price">> => 0,          			% win price (CPI)
-		<<"spend">> => 0                		% spend (CPI)
+		<<"win_price">> => 0,                    % win price (CPI)
+		<<"spend">> => 0                        % spend (CPI)
 	},
 	log_internal(clicks, Data, Opts),
 	[{_, CreativeMap} | _] = ets:lookup(creatives, {Cmp, Crid}),
@@ -228,13 +228,18 @@ relay_click_to_adx(AdxRedirectLink, Click) when is_binary(AdxRedirectLink) ->
 relay_click_to_adx(AdxRedirectLink, #click{
 	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange
 }) ->
-	case httpc:request(get, {AdxRedirectLink, []}, [], []) of
-		{ok, _} ->
-			?INFO("WINS SERVER: Click [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p] relayed to Ad Exchange",
+	case AdxRedirectLink of
+		<<"">> ->
+			?WARN("WINS SERVER: AdX redirect link empty! (timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p)",
 				[TimeStamp, Cmp, Crid, Exchange, BidId]);
 		_ ->
-			?ERROR("WINS SERVER: Error relaying click to Ad exchange! (timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p)",
-				[TimeStamp, Cmp, Crid, Exchange, BidId])
+			case httpc:request(get, {AdxRedirectLink, []}, [], []) of
+				{ok, _} ->
+					ok;
+				_ ->
+					?ERROR("WINS SERVER: Error relaying click to Ad exchange! (timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p)",
+						[TimeStamp, Cmp, Crid, Exchange, BidId])
+			end
 	end.
 
 
@@ -245,8 +250,8 @@ parse_opts(Opts) ->
 parse_opts([], R) ->
 	R;
 parse_opts([{test, Test} | T], R) ->
-	parse_opts(T ,R#opts{test = Test});
+	parse_opts(T, R#opts{test = Test});
 parse_opts([{redirect, Redirect} | T], R) ->
-	parse_opts(T ,R#opts{redirect = Redirect});
+	parse_opts(T, R#opts{redirect = Redirect});
 parse_opts([{clicktag, ClickTag} | T], R) ->
-	parse_opts(T ,R#opts{clicktag = ClickTag}).
+	parse_opts(T, R#opts{clicktag = ClickTag}).
