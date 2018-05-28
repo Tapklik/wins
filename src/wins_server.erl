@@ -229,7 +229,7 @@ relay_click_to_adx(AdxRedirectLink, #click{
 	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange
 }) ->
 	case AdxRedirectLink of
-		<<"">> ->
+		<<"">> orelse <<>> ->
 			?WARN("WINS SERVER: AdX redirect link empty! (timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p)",
 				[TimeStamp, Cmp, Crid, Exchange, BidId]);
 		_ ->
