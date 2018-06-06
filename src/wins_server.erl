@@ -117,8 +117,8 @@ handle_call({log_imp, #imp{
 				 Html0 = tk_maps:get([<<"html">>], CreativeMap),
 				 H = integer_to_binary(tk_maps:get([<<"h">>], CreativeMap)),
 				 W = integer_to_binary(tk_maps:get([<<"w">>], CreativeMap)),
-				 ClickTaq = tk_lib:escape_uri(Opts#opts.clicktag),
-				 Html1 = <<Html0/binary, "?ct=", ClickTaq/binary>>,
+				 ClickTag = tk_lib:escape_uri(Opts#opts.clicktag),
+				 Html1 = <<Html0/binary, "?clickTag=", ClickTag/binary>>,
 				 <<"<iframe src='", Html1/binary, "' marginwidth='0' marginheight='0' align='top' scrolling='no' frameborder='0'"
 					 , "hspace='0' vspace='0' height='", H/binary, "' width='", W/binary, "'></iframe>">>;
 			 <<"banner">> ->

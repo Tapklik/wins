@@ -47,7 +47,7 @@ handle_get(Req, State) ->
 	},
 	Resp = case check_valid_imp(Imp) of
 			   valid when Type == <<"h">> ->
-				   ClickTag = proplists:get_value(<<"ct">>, QsVals, <<"">>),
+				   ClickTag = proplists:get_value(<<"clickTag">>, QsVals, <<"">>),
 				   case wins_server:log_imp(Imp, [{clicktag, ClickTag}, {test, Test}]) of
 					   {ok, Ad} ->
 						   cowboy_req:reply(200, #{<<"content-type">> => <<"text/html">>}, Ad, Req),
