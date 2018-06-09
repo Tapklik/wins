@@ -111,24 +111,24 @@ handle_call({log_imp, #imp{
 	?INFO("WINS SERVER: Imp -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p",
 		[TimeStamp, Cmp, Crid, Exchange, BidId]),
 	log_internal(imps, Data, Opts),
-	[{_, CreativeMap} | _] = ets:lookup(creatives, {Cmp, Crid}),
-	Ad = case tk_maps:get([<<"class">>], CreativeMap) of
-			 <<"html5">> ->
-				 Html0 = tk_maps:get([<<"html">>], CreativeMap),
-				 H = integer_to_binary(tk_maps:get([<<"h">>], CreativeMap)),
-				 W = integer_to_binary(tk_maps:get([<<"w">>], CreativeMap)),
-				 ClickTag = tk_lib:escape_uri(Opts#opts.clicktag),
-				 Html1 = <<Html0/binary, "?clickTag=", ClickTag/binary>>,
-				 <<"<iframe src='", Html1/binary, "' marginwidth='0' marginheight='0' align='top' scrolling='no' frameborder='0'"
-					 , "hspace='0' vspace='0' height='", H/binary, "' width='", W/binary, "'></iframe>">>;
-			 <<"banner">> ->
-				 tk_maps:get([<<"path">>], CreativeMap);
-			 _ ->
-				 ?ERROR("WINS SERVER: Bad creative type [cmp: ~p,  crid: ~p]", [Cmp, Crid]),
-				 ok
-		 end,
+%%	[{_, CreativeMap} | _] = ets:lookup(creatives, {Cmp, Crid}),
+%%	Ad = case tk_maps:get([<<"class">>], CreativeMap) of
+%%			 <<"html5">> ->
+%%				 Html0 = tk_maps:get([<<"html">>], CreativeMap),
+%%				 H = integer_to_binary(tk_maps:get([<<"h">>], CreativeMap)),
+%%				 W = integer_to_binary(tk_maps:get([<<"w">>], CreativeMap)),
+%%				 ClickTag = tk_lib:escape_uri(Opts#opts.clicktag),
+%%				 Html1 = <<Html0/binary, "?clickTag=", ClickTag/binary>>,
+%%				 <<"<iframe src='", Html1/binary, "' marginwidth='0' marginheight='0' align='top' scrolling='no' frameborder='0'"
+%%					 , "hspace='0' vspace='0' height='", H/binary, "' width='", W/binary, "'></iframe>">>;
+%%			 <<"banner">> ->
+%%				 tk_maps:get([<<"path">>], CreativeMap);
+%%			 _ ->
+%%				 ?ERROR("WINS SERVER: Bad creative type [cmp: ~p,  crid: ~p]", [Cmp, Crid]),
+%%				 ok
+%%		 end,
 	pooler:return_member(wins_pool, self()),
-	{reply, {ok, Ad}, State};
+	{reply, {ok, <<"">>}, State};
 
 handle_call({log_click, #click{
 	bid_id = BidId, cmp = Cmp, crid = Crid, timestamp = TimeStamp, exchange = Exchange
