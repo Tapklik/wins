@@ -26,6 +26,7 @@
 	#subscriber{
 		name = cmp_config,
 		exchange = <<"campaigns">>,
+		type = pubsub,
 		topic = <<"config.general">>,
 		logging = true,
 		func = fun(P) -> wins_cmp:load_cmp_config(P) end,
