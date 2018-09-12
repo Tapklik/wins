@@ -37,17 +37,17 @@
 		exchange = <<"wins">>,
 		topic = <<"wins.{bidder_id}">>,
 		logging = false,
-		pool_size = 20},
+		pool_size = 50},
 	#publisher{
 		name = imps,
 		exchange = <<"imps">>,
 		topic = <<"imps.{bidder_id}">>,
 		logging = false,
-		pool_size = 20},
+		pool_size = 50},
 	#publisher{
 		name = clicks,
 		exchange = <<"clicks">>,
 		topic = <<"clicks.{bidder_id}">>,
 		logging = false,
-		pool_size = 5}
+		pool_size = 10}
 ]).
