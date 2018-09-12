@@ -34,6 +34,7 @@ handle_get(Req, State) ->
 		cmp = Cmp,
 		crid = Crid,
 		bid_id = proplists:get_value(<<"b">>, QsVals, undefined),
+		bidder = proplists:get_value(<<"adr">>, QsVals),
 		timestamp = binary_to_integer(proplists:get_value(<<"ts">>, QsVals, <<"0">>)),
 		exchange = proplists:get_value(<<"x">>, QsVals, <<"1">>)
 	},

@@ -15,10 +15,12 @@
 		goldrush,
 		sasl,
 		bertconf,
+		pooler,
 		statsderl,
-		kinetic
+		kinetic,
+		rmq
 	]},
-	{included_applications, [pooler]},
+	{included_applications, []},
 	{mod, {wins, []}},
 	{env, []}
 ]}.

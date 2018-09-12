@@ -60,6 +60,7 @@
 
 -record(imp, {
 	bid_id,
+	bidder,
 	cmp,
 	crid,
 	exchange,
@@ -68,6 +69,7 @@
 
 -record(click, {
 	bid_id,
+	bidder,
 	cmp,
 	crid,
 	exchange,
@@ -76,6 +78,7 @@
 
 -record(conversion, {
 	bid_id,
+	bidder,
 	cmp,
 	crid,
 	exchange,

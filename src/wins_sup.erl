@@ -23,14 +23,6 @@ start_link() ->
 %%%%%%%%%%%%%%%%%%%%%%
 
 init([]) ->
-	PoolerSup = #{
-		id => pooler_sup,
-		start => {pooler_sup, start_link, []},
-		restart => permanent,
-		shutdown => infinity,
-		type => supervisor,
-		modules => [pooler_sup]
-	},
 	DBServer = #{
 		id => wins_db,
 		start => {wins_db, start_link, []},
@@ -46,14 +38,6 @@ init([]) ->
 		shutdown => 2000,
 		type => worker,
 		modules => [wins_cmp]
-	},
-	RmqSup = #{
-		id => rmq_sup,
-		start => {rmq_sup, start_link, []},
-		restart => permanent,
-		shutdown => infinity,
-		type => supervisor,
-		modules => [rmq_sup]
 	},
 	VMServer = #{
 		id => vm,
@@ -71,7 +55,7 @@ init([]) ->
 		type => worker,
 		modules => [time_server]
 	},
-	Children = [PoolerSup, 	DBServer, WinsCmp, RmqSup, VMServer, TimeServer],
+	Children = [DBServer, WinsCmp, VMServer, TimeServer],
 	RestartStrategy = {one_for_one, 10, 300},
 	{ok, {RestartStrategy, Children}}.
 

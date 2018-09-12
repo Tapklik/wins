@@ -40,6 +40,7 @@ handle_get(Req, State) ->
 
 			   ConversionNotification = #conversion{
 				   bid_id = proplists:get_value(<<"b">>, QsVals, undefined),
+				   bidder = proplists:get_value(<<"adr">>, QsVals),
 				   cmp = proplists:get_value(<<"c">>, QsVals, undefined),
 				   crid = proplists:get_value(<<"cr">>, QsVals, undefined),
 				   timestamp = binary_to_integer(proplists:get_value(<<"ts">>, QsVals, 0)),
@@ -55,13 +56,14 @@ handle_get(Req, State) ->
 							   "Error: invalid call"
 					   end;
 				   valid when Test == <<"1">> ->
-					   ?INFO("WINS SERVER (TEST): Conversion -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p",
+					   ?INFO("WINS SERVER (TEST): Conversion -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p, bidder: ~p",
 						   [
 							   ConversionNotification#click.timestamp,
 							   ConversionNotification#click.cmp,
 							   ConversionNotification#click.crid,
 							   ConversionNotification#click.exchange,
-							   ConversionNotification#click.bid_id
+							   ConversionNotification#click.bid_id,
+							   ConversionNotification#click.bidder
 						   ]),
 					   "Success";
 				   {invalid, Error} ->

@@ -5,6 +5,7 @@
 -record(subscriber, {
 	name,
 	exchange,
+	type,
 	topic,
 	func,
 	pool_size,
@@ -18,15 +19,6 @@
 	pool_size,
 	logging
 }).
-
-%% RABBITMQ PUBSUB SETTINGS
-% Define RMQ_HOST in global.hrl
--define(RMQ_PORT, 5672).
--define(RMQ_USER, <<"tapklik">>).
--define(RMQ_PASSWORD, <<"tapKlik7-rabbitmq">>).
--define(RMQ_VHOST, <<"/erl">>).
-
--define(RMQ_X_MESSAGE_TTL, 60000).
 
 
 %% RABBITMQ PUBSUB SUBSCRIBERS AND PUBLISHERS
@@ -45,5 +37,17 @@
 		exchange = <<"wins">>,
 		topic = <<"wins.{bidder_id}">>,
 		logging = false,
-		pool_size = 50}
+		pool_size = 20},
+	#publisher{
+		name = imps,
+		exchange = <<"imps">>,
+		topic = <<"imps.{bidder_id}">>,
+		logging = false,
+		pool_size = 20},
+	#publisher{
+		name = clicks,
+		exchange = <<"clicks">>,
+		topic = <<"clicks.{bidder_id}">>,
+		logging = false,
+		pool_size = 5}
 ]).
