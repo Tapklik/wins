@@ -3,8 +3,22 @@ All notable changes to this project will be documented in this file.
 
 
 ## [Unreleased]
+
+
+## [0.3.2] - 2018-09-12
+### Added
 - Added httpc call GET for redirect from Google
+- tapklik rmq as dependency
+
+### Changed
 - Change ct to clickTag
+- Changed wins/imps publish to rmq:publish_batch
+
+### Fixed
+
+### Removed
+- rmq.erl and rmq_sup
+
 
 ## [0.3.1] - 2018-04-21
 ### Added
