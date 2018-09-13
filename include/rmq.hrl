@@ -28,7 +28,7 @@
 		exchange = <<"campaigns">>,
 		type = pubsub,
 		topic = <<"config.general">>,
-		logging = true,
+		logging = false,
 		func = fun(P) -> wins_cmp:load_cmp_config(P) end,
 		pool_size = 5}
 ]).

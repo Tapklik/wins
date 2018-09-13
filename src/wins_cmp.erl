@@ -33,9 +33,9 @@ start_link() ->
 %% Takes config as Json, prints it on shell, extracts vital data
 %% and writes it to creatives ets table, owned by wins_gs_creative
 %%
--spec(load_cmp_config(CmpConfigProp :: list()) -> {ok, success}).
-load_cmp_config(CmpConfigProp) ->
-	get_and_save_campaigns_and_creatives(maps:from_list(CmpConfigProp)),
+-spec(load_cmp_config(CmpConfig :: map()) -> {ok, success}).
+load_cmp_config(CmpConfig) ->
+	get_and_save_campaigns_and_creatives(CmpConfig),
 	{ok, success}.
 
 
@@ -111,11 +111,13 @@ code_change(_OldVsn, State, _Extra) ->
 -spec(get_and_save_campaigns_and_creatives(CmpConfig :: map()) -> ok).
 get_and_save_campaigns_and_creatives(CmpConfig) ->
 	Cmp = tk_maps:get([<<"cmp">>], CmpConfig),
-	CmpFees = tk_maps:get([<<"config">>, <<"fees">>], CmpConfig, undefined),
-	AccId = tk_maps:get([<<"config">>, <<"acc">>], CmpConfig, undefined),
+	Config0 = tk_maps:get([<<"config">>], CmpConfig),
+	Config = maps:from_list(Config0),
+	CmpFees = tk_maps:get([<<"fees">>], Config, undefined),
+	AccId = tk_maps:get([<<"acc">>], Config, undefined),
 	ets:insert(campaigns, {Cmp, AccId,CmpFees}),
-	CmpCtrUrl = tk_maps:get([<<"config">>, <<"config">>, <<"ctrurl">>], CmpConfig, undefined),
-	CreativeList = tk_maps:get([<<"config">>, <<"creatives">>], CmpConfig, []),
+	CmpCtrUrl = tk_maps:get([<<"config">>, <<"ctrurl">>], Config, undefined),
+	CreativeList = tk_maps:get([<<"creatives">>], Config, []),
 	lists:foreach(
 		fun(C) ->
 			K = {Cmp, tk_maps:get([<<"crid">>], C)},
