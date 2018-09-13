@@ -33,9 +33,9 @@ start_link() ->
 %% Takes config as Json, prints it on shell, extracts vital data
 %% and writes it to creatives ets table, owned by wins_gs_creative
 %%
--spec(load_cmp_config(CmpConfig :: map()) -> {ok, success}).
-load_cmp_config(CmpConfig) ->
-	get_and_save_campaigns_and_creatives(CmpConfig),
+-spec(load_cmp_config(CmpConfigProp :: list()) -> {ok, success}).
+load_cmp_config(CmpConfigProp) ->
+	get_and_save_campaigns_and_creatives(maps:from_list(CmpConfigProp)),
 	{ok, success}.
 
 
