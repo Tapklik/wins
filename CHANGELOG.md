@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 
+## [0.3.3] - 2018-09-16
+### Added
+
+### Changed
+
+### Fixed
+
+### Removed
+- Removed rmq.hrl and added all configs for RMQ in global
+
+
 ## [0.3.2] - 2018-09-12
 ### Added
 - Added httpc call GET for redirect from Google
