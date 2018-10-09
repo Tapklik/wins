@@ -126,7 +126,7 @@
 		exchange = <<"wins">>,
 		topic = <<"wins.{bidder_id}">>,
 		logging = false,
-		pool_size = 20},
+		pool_size = 40},
 	#publisher{
 		name = imps,
 		exchange = <<"imps">>,
