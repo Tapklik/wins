@@ -88,7 +88,7 @@ handle_call({log_win, #win{
 	},
 	?INFO("WINS SERVER: Win -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  price: (buy: $~p / sell: $~p),  exchange: ~p,  bidder: ~p, bid_id: ~p",
 		[TimeStamp, Cmp, Crid, WinPrice, Spend, Exchange, Bidder, BidId]),
-	rmq:publish_batch(wins, <<"wins.", Bidder/binary>>, Data),
+	rmq:publish(wins, <<"wins.", Bidder/binary>>, Data),
 	log_internal(wins, Data, Opts),
 	pooler:return_member(wins_pool, self()),
 	{reply, {ok, successful}, State};
@@ -110,7 +110,7 @@ handle_call({log_imp, #imp{
 	},
 	?INFO("WINS SERVER: Imp -> [timestamp: ~p,  cmp: ~p,  crid: ~p,  exchange: ~p,  bid_id: ~p",
 		[TimeStamp, Cmp, Crid, Exchange, BidId]),
-	rmq:publish_batch(imps, <<"wins.", Bidder/binary>>, Data),
+	rmq:publish_batch(imps, <<"imps.", Bidder/binary>>, Data),
 	log_internal(imps, Data, Opts),
 %%	[{_, CreativeMap} | _] = ets:lookup(creatives, {Cmp, Crid}),
 %%	Ad = case tk_maps:get([<<"class">>], CreativeMap) of
@@ -146,7 +146,7 @@ handle_call({log_click, #click{
 		<<"win_price">> => 0,                    % win price (CPI)
 		<<"spend">> => 0                        % spend (CPI)
 	},
-	rmq:publish(clicks, <<"wins.", Bidder/binary>>, Data),
+	rmq:publish(clicks, <<"clicks.", Bidder/binary>>, Data),
 	log_internal(clicks, Data, Opts),
 	[{_, CreativeMap} | _] = ets:lookup(creatives, {Cmp, Crid}),
 	Redirect = tk_maps:get([<<"ctrurl">>], CreativeMap),
